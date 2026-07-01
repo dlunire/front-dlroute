@@ -33,7 +33,7 @@ route('/ruta/registrada', function () {
     // ...
 });
 
-const method: Function = dispatch().component as typeof Function;
+const method: Function = dispatch().component as typeof Function | null;
 
 method();
 ```
