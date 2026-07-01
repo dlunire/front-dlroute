@@ -1,13 +1,37 @@
 {
   "name": "routing-parsing",
   "version": "1.0.0",
-  "description": "",
-  "main": "router.js",
+  "description": "Módulo de enrutamiento del lado del cliente (navegador) para integrarse con DLRoute",
+  "type": "module",
+  "main": "./dist/router.js",
+  "module": "./dist/router.js",
+  "browser": "./dist/router.js",
+  "types": "./dist/router.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/router.d.ts",
+      "import": "./dist/router.js",
+      "browser": "./dist/router.js",
+      "default": "./dist/router.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "pnpm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "router",
+    "routing",
+    "dlroute",
+    "frontend",
+    "browser",
+    "parser"
+  ],
+  "author": "David E. Luna M.",
   "license": "ISC",
   "devEngines": {
     "packageManager": {
@@ -15,6 +39,5 @@
       "version": "^11.9.0",
       "onFail": "download"
     }
-  },
-  "type": "module"
+  }
 }
