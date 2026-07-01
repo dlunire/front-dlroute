@@ -1,18 +1,18 @@
 {
   "name": "front-dlroute",
   "version": "1.0.0",
-  "description": "Módulo de enrutamiento del lado del cliente (navegador) para integrarse con DLRoute",
+  "description": "Módulo de enrutamiento del lado del cliente (navegador) para integrarse con DLRoute de DLUnire",
   "type": "module",
-  "main": "./dist/router.js",
-  "module": "./dist/router.js",
-  "browser": "./dist/router.js",
-  "types": "./dist/router.d.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "browser": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/router.d.ts",
-      "import": "./dist/router.js",
-      "browser": "./dist/router.js",
-      "default": "./dist/router.js"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "browser": "./dist/index.js",
+      "default": "./dist/index.js"
     }
   },
   "files": [
