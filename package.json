@@ -39,5 +39,8 @@
       "version": "^11.9.0",
       "onFail": "download"
     }
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
   }
 }
