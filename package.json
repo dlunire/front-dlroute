@@ -1,5 +1,5 @@
 {
-  "name": "routing-parsing",
+  "name": "front-dlroute",
   "version": "1.0.0",
   "description": "Módulo de enrutamiento del lado del cliente (navegador) para integrarse con DLRoute",
   "type": "module",

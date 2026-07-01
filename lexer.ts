@@ -1,4 +1,4 @@
-import { TokenType, type RouteType, type Token } from "./type";
+import { TokenType, type RouteType, type Token } from "./type.js";
 
 /** Tokens  capturados durante el análisis léxico */
 const tokens: Token[] = [];

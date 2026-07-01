@@ -1,5 +1,5 @@
-import * as parsing from "./lexer";
-import type { CurrentRouteType, Token } from "./type";
+import * as parsing from "./lexer.js";
+import type { CurrentRouteType, Token } from "./type.js";
 
 /**
  * Obtiene la URI canónica configurada como base del enrutador.

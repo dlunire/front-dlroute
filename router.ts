@@ -1,8 +1,6 @@
-import * as parsing from "./lexer";
-import * as routing from "./base-url";
-
-import { TokenType, type CurrentRouteType, type Dispatch, type Param, type RouteType, type Token, type ValidatedRoute } from "./type";
-
+import * as parsing from "./lexer.js";
+import * as routing from "./base-url.js";
+import { TokenType, type CurrentRouteType, type Dispatch, type Param, type RouteType, type Token, type ValidatedRoute } from "./type.js";
 
 /**
  * Tabla interna de rutas registradas por el router.
