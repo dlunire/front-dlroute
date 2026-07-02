@@ -1,6 +1,8 @@
 # `@dlunire/front-dlroute` — Tutorial de uso
 
-Motor de enrutamiento del lado del cliente para integrarse con el sistema de rutas de DLUnire.
+Motor de enrutamiento del lado del cliente para integrarse con el sistema
+de rutas de DLUnire. Compatible con cualquier framework de interfaz de
+usuario (Svelte, Vue, React, Vanilla JS, etc.).
 
 ---
 
@@ -29,7 +31,9 @@ yarn add @dlunire/front-dlroute
 
 ## Configuración del HTML
 
-El router necesita saber cuál es la URL base de la aplicación. Esta información la inyecta el **backend automáticamente** en el HTML que sirve, colocando el siguiente meta tag dentro del `<head>`:
+El router necesita saber cuál es la URL base de la aplicación. Esta
+información la inyecta el **backend automáticamente** en el HTML que
+sirve, colocando el siguiente meta tag dentro del `<head>`:
 
 ```html
 <!DOCTYPE html>
@@ -55,169 +59,259 @@ El router necesita saber cuál es la URL base de la aplicación. Esta informaci�
 ```
 
 > **¿Por qué lo inyecta el backend?**
-> Porque si el meta tag lo pusiera el desarrollador manualmente, tendría
-> que cambiarlo en cada entorno (local, staging, producción). Al inyectarlo
-> el backend, la URL siempre refleja el dominio real desde el que se sirve
-> el HTML. Si la URL no coincidiera con la del documento actual, el script
-> ni siquiera cargaría, por lo que el valor de `content` siempre será
-> correcto en tiempo de ejecución.
+> Porque si la URL base no coincidiera con el dominio real desde el que
+> se sirve el documento, el script ni siquiera cargaría. Eso garantiza
+> que el valor de `content` sea siempre correcto en tiempo de ejecución,
+> sin importar el entorno (local, staging, producción).
 
 ---
 
 ## Uso básico
 
-### Registrar rutas y despachar
+### 1. Registrar rutas
+
+Cada ruta se registra con `route(uri, component)`, donde `component`
+puede ser un componente, un controlador, una función o cualquier recurso
+que tu aplicación necesite renderizar cuando esa ruta sea activada.
 
 ```ts
 // src/main.ts
-import { route, getBaseURL, getRoute } from '@dlunire/front-dlroute';
+import { route, dispatch } from '@dlunire/front-dlroute';
 
-// Registrar rutas estáticas
-route('/usuarios');
-route('/productos');
-route('/contacto');
+// Rutas estáticas
+route('/usuarios', UsuariosVista);
+route('/usuarios/perfil', PerfilVista);
+route('/contacto', ContactoVista);
 
-// Registrar rutas con parámetros
-route('/usuarios/:id');
-route('/productos/:slug');
+// Rutas parametrizadas
+route('/usuarios/:id', UsuarioDetalleVista);
+route('/clientes/:id/pedidos/:pedido', PedidoDetalleVista);
+```
 
-// Obtener la URL base (leída desde el meta tag)
-const base = getBaseURL();
-console.log('URL base:', base);
-// → "https://servidor.com"
+### 2. Despachar la ruta actual
 
-// Obtener la ruta relativa actual
-const rutaActual = getRoute();
-console.log('Ruta actual:', rutaActual);
-// → "/usuarios/123"
+```ts
+const resultado = dispatch();
+
+if (resultado.validated.validated) {
+    // Ruta encontrada: renderizar el componente asociado
+    renderizar(resultado.component, resultado.validated.param);
+} else {
+    // Ninguna ruta coincidió: mostrar vista 404
+    renderizar(Vista404);
+}
 ```
 
 ---
 
-## Funciones exportadas
+## API completa
 
-### `route(uri: string): void`
+### `route(uri, component): void`
 
-Registra una ruta en la tabla interna del router. Acepta rutas estáticas y parametrizadas. El lexer clasifica automáticamente cada segmento.
+Registra una ruta en la tabla interna del router junto con el recurso
+asociado. El analizador léxico clasifica automáticamente cada segmento
+como estático o parametrizado.
 
 ```ts
 import { route } from '@dlunire/front-dlroute';
 
-// Ruta estática — todos los segmentos son literales
-route('/usuarios');
-route('/usuarios/perfil');
+// Con función anónima
+route('/usuarios', () => {
+    console.log('cargando vista de usuarios');
+});
 
-// Ruta parametrizada — los segmentos con `:` son dinámicos
-route('/usuarios/:id');
-route('/usuarios/:id/pedidos');
-route('/productos/:categoria/:slug');
+// Con función con nombre
+route('/contacto', vistaContacto);
+
+// Con componente (Svelte, Vue, React, etc.)
+import UsuarioDetalle from './vistas/UsuarioDetalle.svelte';
+route('/usuarios/:id', UsuarioDetalle);
+
+// Con módulo cargado dinámicamente
+route('/admin', () => import('./vistas/Admin.js'));
+
+// Rutas parametrizadas anidadas
+route('/clientes/:id/pedidos/:pedido', PedidoDetalle);
 ```
 
-> Los parámetros se identifican por el prefijo `:`. Un parámetro sin
-> nombre (`:` a secas) lanza un error en tiempo de registro.
+El segundo parámetro se declara como `unknown` internamente para que el
+router no quede acoplado a ningún framework específico. El consumidor
+decide qué tipo de recurso asocia a cada ruta.
+
+> Un parámetro sin nombre (`:` a secas) lanza un `Error` en tiempo de
+> registro, no en tiempo de despacho.
 
 ---
 
-### `getBaseURL(): string`
+### `dispatch(): Dispatch`
 
-Devuelve la URL base de la aplicación. Lee el valor del meta tag
-`<meta name="dlroute:base-url">` si existe; en caso contrario, usa
-la URL actual del navegador (`location.href`) como fallback.
+Resuelve la ruta actual y devuelve el componente asociado junto con los
+parámetros capturados.
+
+El proceso de resolución ocurre en dos etapas con prioridades distintas:
+
+1. **Rutas estáticas primero:** búsqueda directa `O(1)` sobre la tabla
+   interna. Si la URI actual coincide exactamente con una ruta estática
+   registrada, se devuelve inmediatamente sin recorrer las parametrizadas.
+2. **Rutas parametrizadas si no hay coincidencia estática:** se recorren
+   comparando token por token, extrayendo los valores de los parámetros
+   en los segmentos marcados con `:`.
 
 ```ts
-import { getBaseURL } from '@dlunire/front-dlroute';
+import { route, dispatch } from '@dlunire/front-dlroute';
 
-const base = getBaseURL();
-// Con meta tag:  "https://servidor.com"
-// Sin meta tag:  "https://localhost:5173"
+route('/usuarios', UsuariosVista);
+route('/usuarios/:id', UsuarioDetalleVista);
+route('/clientes/:id/pedidos/:pedido', PedidoDetalleVista);
+
+const resultado = dispatch();
+
+// resultado tiene la forma:
+// {
+//     validated: {
+//         validated: boolean,
+//         uri: string | null,       // clave canónica de la ruta coincidente
+//         param: { [key: string]: string }  // parámetros capturados
+//     },
+//     component: unknown | null     // recurso asociado a la ruta
+// }
+```
+
+**Ejemplo con ruta estática** (`/usuarios`):
+
+```ts
+// URL actual: https://servidor.com/usuarios
+const resultado = dispatch();
+// {
+//     validated: { validated: true, uri: '0-/usuarios', param: {} },
+//     component: UsuariosVista
+// }
+```
+
+**Ejemplo con ruta parametrizada** (`/usuarios/:id`):
+
+```ts
+// URL actual: https://servidor.com/usuarios/123
+const resultado = dispatch();
+// {
+//     validated: {
+//         validated: true,
+//         uri: '1-/usuarios/:id',
+//         param: { id: '123' }
+//     },
+//     component: UsuarioDetalleVista
+// }
+```
+
+**Ejemplo con múltiples parámetros** (`/clientes/:id/pedidos/:pedido`):
+
+```ts
+// URL actual: https://servidor.com/clientes/42/pedidos/100
+const resultado = dispatch();
+// {
+//     validated: {
+//         validated: true,
+//         uri: '1-/clientes/:id/pedidos/:pedido',
+//         param: { id: '42', pedido: '100' }
+//     },
+//     component: PedidoDetalleVista
+// }
+```
+
+**Sin coincidencia (404)**:
+
+```ts
+// URL actual: https://servidor.com/ruta-inexistente
+const resultado = dispatch();
+// {
+//     validated: { validated: false, uri: null, param: {} },
+//     component: null
+// }
 ```
 
 ---
 
-### `getRoute(): string`
+### `resetState(): void`
 
-Devuelve la ruta relativa actual, calculada como:
-
-```
-ROUTE = CURRENT_URI - BASE_URI
-```
-
-Es decir, toma la URI canónica de la URL actual del navegador y le
-resta el prefijo correspondiente a la URL base registrada en el meta
-tag. El resultado es la ruta que el router debe resolver.
+Elimina todas las rutas registradas y deja el router en su estado
+inicial. Útil en pruebas, Hot Module Replacement o cuando el conjunto
+de rutas necesita reconstruirse completamente.
 
 ```ts
-import { getRoute } from '@dlunire/front-dlroute';
+import { route, resetState, getRoutes } from '@dlunire/front-dlroute';
 
-// Si la URL actual es: https://servidor.com/usuarios/123
-// Y la base es:        https://servidor.com
-// Entonces:
-const ruta = getRoute();
-// → "/usuarios/123"
+route('/usuarios', UsuariosVista);
+route('/productos', ProductosVista);
+
+resetState();
+
+console.log(getRoutes()); // → {}
 ```
+
+---
+
+### `getRoutes(): object`
+
+Devuelve la tabla interna de rutas registradas, indexadas por su clave
+canónica (`<tipo>-<uri>`). Pensada para depuración, inspección o
+herramientas de desarrollo.
+
+```ts
+import { route, getRoutes } from '@dlunire/front-dlroute';
+
+route('/usuarios', UsuariosVista);
+route('/usuarios/:id', UsuarioDetalleVista);
+
+console.log(Object.keys(getRoutes()));
+// → ['0-/usuarios', '1-/usuarios/:id']
+//      ^                ^
+//      tipo 0 = Static  tipo 1 = Parameter
+```
+
+> Esta función expone la misma instancia interna del router, no una
+> copia. Modificar el objeto devuelto afecta directamente al estado del
+> despachador.
 
 ---
 
 ## Funciones del analizador léxico (bajo nivel)
 
-Estas funciones forman la base del router. Están disponibles para casos
-donde se necesita acceso directo a los tokens o a la URI normalizada.
+### `getTokensFromURI(uri): Token[]`
 
-### `getTokensFromURI(uri: string): Token[]`
-
-Tokeniza una URI y devuelve sus segmentos como un array de tokens.
-Cada token incluye su clasificación (`Static` o `Parameter`), el
-lexema, la posición y la longitud.
+Tokeniza una URI y devuelve sus segmentos clasificados. Cada token
+incluye tipo (`0` = Static, `1` = Parameter), lexema, posición y longitud.
 
 ```ts
 import { getTokensFromURI } from '@dlunire/front-dlroute';
 
 const tokens = getTokensFromURI('/usuarios/:id/pedidos');
 // [
-//   { type: 0 /* Static */,    lexeme: 'usuarios', offset: 1, length: 8 },
-//   { type: 1 /* Parameter */, lexeme: ':id',      offset: 10, length: 3 },
-//   { type: 0 /* Static */,    lexeme: 'pedidos',  offset: 14, length: 7 },
+//   { type: 0, lexeme: 'usuarios', offset: 1,  length: 8 },
+//   { type: 1, lexeme: ':id',      offset: 10, length: 3 },
+//   { type: 0, lexeme: 'pedidos',  offset: 14, length: 7 },
 // ]
 ```
 
 ---
 
-### `getURIFromURI(uri: string): string`
+### `getURIFromURI(uri): string`
 
-Normaliza una URI: colapsa separadores redundantes (`//`), reemplaza
-espacios por `_` y descarta el query string.
+Normaliza una URI: colapsa separadores redundantes, reemplaza espacios
+por `_` y descarta el query string.
 
 ```ts
 import { getURIFromURI } from '@dlunire/front-dlroute';
 
-getURIFromURI('/usuarios//123?token=abc');
-// → "/usuarios/123"
-
-getURIFromURI('/pro duc tos///ropa');
-// → "/pro_duc_tos/ropa"
+getURIFromURI('/usuarios//123?token=abc'); // → "/usuarios/123"
+getURIFromURI('/pro duc tos///ropa');      // → "/pro_duc_tos/ropa"
 ```
 
 ---
 
-### `getCanonicalURI(): string`
+### `getURLFromURL(stringURL?): URL`
 
-Devuelve la URI canónica construida a partir del último análisis
-realizado. Útil cuando se necesita la URI sin volver a tokenizar.
-
-```ts
-import { getTokensFromURI, getCanonicalURI } from '@dlunire/front-dlroute';
-
-getTokensFromURI('/usuarios//123/');
-getCanonicalURI();
-// → "/usuarios/123"
-```
-
----
-
-### `getURLFromURL(stringURL?: string): URL`
-
-Construye un objeto `URL` nativo con el `pathname` normalizado por el
-lexer. Compatible con navegador y Node.js.
+Construye un objeto `URL` nativo con el `pathname` normalizado. Compatible
+con navegador y Node.js.
 
 ```ts
 import { getURLFromURL } from '@dlunire/front-dlroute';
@@ -233,87 +327,88 @@ const urlActual = getURLFromURL();
 
 ---
 
-## Ejemplo completo con Vite
+## Ejemplo completo con Vite + Vanilla TS
 
 ```ts
 // src/main.ts
-import {
-    route,
-    getBaseURL,
-    getRoute,
-    getTokensFromURI
-} from '@dlunire/front-dlroute';
+import { route, dispatch, resetState } from '@dlunire/front-dlroute';
 
-// 1. Registrar todas las rutas de la aplicación
-route('/');
-route('/usuarios');
-route('/usuarios/:id');
-route('/productos');
-route('/productos/:slug');
+// Vistas (pueden ser cualquier cosa: componentes, clases, funciones)
+import InicioVista      from './vistas/Inicio.js';
+import UsuariosVista    from './vistas/Usuarios.js';
+import UsuarioDetalle   from './vistas/UsuarioDetalle.js';
+import PedidoDetalle    from './vistas/PedidoDetalle.js';
+import Vista404         from './vistas/404.js';
 
-// 2. Leer la URL base inyectada por el backend
-const base = getBaseURL();
-console.log('Base:', base);
+// Registrar rutas
+route('/',                              InicioVista);
+route('/usuarios',                      UsuariosVista);
+route('/usuarios/:id',                  UsuarioDetalle);
+route('/clientes/:id/pedidos/:pedido',  PedidoDetalle);
 
-// 3. Resolver la ruta actual
-const rutaActual = getRoute();
-console.log('Ruta:', rutaActual);
+// Resolver la ruta actual
+function navegar(): void {
+    const resultado = dispatch();
 
-// 4. Tokenizar para matching dinámico
-const tokens = getTokensFromURI(rutaActual);
-const tieneParametros = tokens.some(t => t.type === 1 /* Parameter */);
+    if (!resultado.validated.validated || resultado.component === null) {
+        renderizar(Vista404, {});
+        return;
+    }
 
-if (tieneParametros) {
-    console.log('Ruta dinámica detectada');
-    tokens
-        .filter(t => t.type === 1)
-        .forEach(t => {
-            // El nombre del parámetro sin el prefijo ":"
-            const nombre = t.lexeme.slice(1);
-            console.log(`Parámetro: ${nombre}`);
-        });
-} else {
-    console.log('Ruta estática');
+    renderizar(resultado.component, resultado.validated.param);
 }
+
+function renderizar(componente: unknown, params: object): void {
+    const app = document.getElementById('app')!;
+    // Aquí integras con tu framework o estrategia de renderizado
+    console.log('Componente:', componente);
+    console.log('Parámetros:', params);
+}
+
+// Navegar al cargar
+navegar();
+
+// Navegar en cada cambio de historial
+window.addEventListener('popstate', navegar);
 ```
 
 ---
 
 ## Comportamiento ante URIs "sucias"
 
-El lexer normaliza automáticamente cualquier URI de entrada:
+El lexer normaliza automáticamente cualquier URI de entrada antes de
+hacer matching:
 
-| Entrada | Resultado de `getURIFromURI` |
-|---|---|
-| `/usuarios//123` | `/usuarios/123` |
-| `/usuarios/123?token=abc` | `/usuarios/123` |
-| `/pro duc tos` | `/pro_duc_tos` |
+| Entrada                      | URI canónica            |
+| ---------------------------- | ----------------------- |
+| `/usuarios//123`             | `/usuarios/123`         |
+| `/usuarios/123?token=abc`    | `/usuarios/123`         |
+| `/pro duc tos`               | `/pro_duc_tos`          |
 | `/usuarios////123///pedidos` | `/usuarios/123/pedidos` |
-| `` (vacío) | `/` |
+| `` (vacío)                   | `/`                     |
 
-Esto garantiza que el matching de rutas sea siempre determinístico,
+Esto garantiza que el matching sea siempre determinístico,
 independientemente de cómo haya sido construida la URL original.
 
 ---
 
 ## Notas importantes
 
-- El meta tag `dlroute:base-url` **no debe escribirse a mano en producción**:
-  debe ser inyectado por el backend de DLUnire.
-- Un parámetro sin nombre (`:` a secas) lanza un `Error` en tiempo de
-  registro, no en tiempo de matching.
-- El router no es seguro para invocaciones concurrentes en el mismo
-  proceso (por ejemplo, dos tokenizaciones simultáneas en workers
-  compartidos), ya que el estado del analizador léxico es compartido a
-  nivel de módulo.
-- Las funciones de alto nivel (`getTokensFromURI`, `getURIFromURI`, etc.)
-  devuelven siempre snapshots independientes (`[...tokens]`), por lo que
-  los resultados ya obtenidos no se ven afectados por llamadas posteriores.
+- El meta tag `dlroute:base-url` **lo inyecta el backend de DLUnire**,
+  no el desarrollador manualmente.
+- Las **rutas estáticas tienen prioridad** sobre las parametrizadas y
+  se resuelven en `O(1)` mediante lookup directo.
+- Un **parámetro sin nombre** (`:` a secas) lanza un `Error` en tiempo
+  de registro, no en tiempo de despacho.
+- `component` se declara como `unknown` para que el router sea
+  **agnóstico de framework**: funciona igual con Svelte, Vue, React o
+  Vanilla JS.
+- `getRoutes()` expone la instancia interna, no una copia. Para
+  inspeción y debugging únicamente.
 
 ---
 
-## Repositorio
+## Repositorio y paquete
 
-[github.com/dlunire/front-dlroute](https://github.com/dlunire/front-dlroute)
-
-**Paquete npm:** [`@dlunire/front-dlroute`](https://www.npmjs.com/package/@dlunire/front-dlroute)
+- **GitHub:** [github.com/dlunire/front-dlroute](https://github.com/dlunire/front-dlroute)
+- **npm:** [`@dlunire/front-dlroute`](https://www.npmjs.com/package/@dlunire/front-dlroute)
