@@ -1,6 +1,5 @@
-import { defineConfig } from 'vite'
-import path from 'path'
-
+import { defineConfig } from 'vite';
+import path from 'path';
 export default defineConfig({
     resolve: {
         alias: {
@@ -8,4 +7,4 @@ export default defineConfig({
             '@dlunire/front-dlroute': path.resolve(__dirname, '../front-dlroute/index.ts')
         }
     }
-})
+});

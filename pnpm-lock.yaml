@@ -203,19 +203,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  '@dlunire/front-dlroute': 'link:'
-
 importers:
 
   .:
-    dependencies:
-      '@dlunire/front-dlroute':
-        specifier: 'link:'
-        version: 'link:'
-      vite:
-        specifier: ^8.1.2
-        version: 8.1.2(@types/node@26.0.1)
     devDependencies:
       '@types/node':
         specifier: ^26.0.1
@@ -223,6 +213,9 @@ importers:
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
+      vite:
+        specifier: ^8.1.2
+        version: 8.1.2(@types/node@26.0.1)
 
 packages:
 
