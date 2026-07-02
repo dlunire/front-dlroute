@@ -41,12 +41,14 @@
     }
   },
   "devDependencies": {
+    "@types/node": "^26.0.1",
     "typescript": "^6.0.3"
   },
   "publishConfig": {
     "access": "public"
   },
   "dependencies": {
-    "@dlunire/front-dlroute": "link:"
+    "@dlunire/front-dlroute": "link:",
+    "vite": "^8.1.2"
   }
 }
