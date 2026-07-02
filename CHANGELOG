@@ -4,7 +4,7 @@ Todos los cambios notables en este proyecto serán documentados en este archivo 
 
 ---
 
-## [1.0.2] - 2026-07-02
+## [1.0.3] - 2026-07-02
 
 ### Fixed
 * **base-url**: Se corrigió un fallo crítico de redundancia en la manipulación de cadenas dentro de la función `determineRoute()`. Al operar sobre un *Base URL* raíz (`/`), el algoritmo anteponía erróneamente un carácter diagonal extra, generando rutas duplicadas (`//ruta`) que provocaban un fallo de coincidencia (*hash table miss*) en el mapa estricto del despachador (`router.ts`). Resuelto mediante optimización directa sobre los límites de extracción de la subcadena nativa.
