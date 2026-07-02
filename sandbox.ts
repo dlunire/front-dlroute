@@ -6,4 +6,4 @@ routing.route("/ciencia", function () {
 
 const component: Function | null = routing.dispatch().component as typeof Function | null;
 
-console.log({ component });
+console.log({ component, route: routing.getRoute().uri });
