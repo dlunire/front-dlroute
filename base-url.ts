@@ -174,11 +174,12 @@ function determineRoute(): CurrentRouteType {
     /** Ruta procesada */
     const processedRoute = route[0] === "/"
         ? route
-        : `/${currentURI.substring(offset - 1)}`;
+        : `${currentURI.substring(offset - 1)}`;
 
     /** Token capturado durante el análisis léxico de la ruta procesada */
     const tokens: Token[] = parsing.getTokensFromURI(processedRoute);
 
+    console.log({ processedRoute });
     return {
         uri: processedRoute,
         tokens: [...tokens]
