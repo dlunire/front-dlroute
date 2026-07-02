@@ -22,21 +22,21 @@ publish: build
 ## Incrementa la versión patch (1.0.0 → 1.0.1) y publica
 ## Usar para: correcciones, actualizaciones de documentación, ajustes menores
 patch: check
-	npm version patch
+	pnpm version patch
 	git push --follow-tags
 	pnpm publish
 
 ## Incrementa la versión minor (1.0.0 → 1.1.0) y publica
 ## Usar para: nuevas funcionalidades que no rompen la API existente
 minor: check
-	npm version minor
+	pnpm version minor
 	git push --follow-tags
 	pnpm publish
 
 ## Incrementa la versión major (1.0.0 → 2.0.0) y publica
 ## Usar para: cambios que rompen compatibilidad con versiones anteriores
 major: check
-	npm version major
+	pnpm version major
 	git push --follow-tags
 	pnpm publish
 
