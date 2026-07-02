@@ -32,7 +32,7 @@
     "parser"
   ],
   "author": "David E. Luna M.",
-  "license": "ISC",
+  "license": "MIT",
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
