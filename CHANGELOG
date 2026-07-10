@@ -1,66 +1,124 @@
 # Changelog — @dlunire/front-dlroute
 
-Todos los cambios notables en este proyecto serán documentados en este archivo conforme a las especificaciones de [Semantic Versioning](https://semver.org/).
+Todos los cambios notables de este proyecto se documentan en este archivo.
+
+El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
+y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
+
+---
+
+## [2.0.2] - 2026-07-10
+
+Documentación y metadatos del repositorio (sin cambios de API de runtime respecto a 2.0.1).
+
+### Fixed
+
+- **Enlaces rotos en la documentación del paquete** (repo git independiente `dlunire/front-dlroute`):
+  - `README.md`: eliminadas rutas al monorepo local (`../../../README.md`, `../../dlroute/...`) que fallaban en GitHub; sustituidas por enlaces públicos a `github.com/dlunire` y `dlunire/dlroute`.
+  - `docs/README.md`: corregido enlace erróneo a dlroute (`../../dlroute/...` → rutas válidas dentro del repo + URLs de GitHub).
+  - `CHANGELOG` (entrada 2.0.0): enlace a `LICENSE` del propio paquete; eliminada referencia a `LICENSING.md` inexistente en este repo.
+
+### Changed
+
+- **CHANGELOG** reorganizado al estilo Keep a Changelog (secciones claras, notas de 2.0.1, enlaces de comparación entre tags).
+- **`docs/README.md`:** índice autocontenido del paquete (sin depender del layout del monorepo de desarrollo).
 
 ---
 
 ## [2.0.1] - 2026-07-10
 
+Parche de **correctness** en el match de rutas parametrizadas, documentación alineada al propósito real del paquete (UI en el navegador, no SSR) y batería de pruebas automatizadas.
+
 ### Fixed
-* **`getValidateRoute` (match parametrizado):** los segmentos **estáticos** del patrón deben coincidir con la URL. Antes bastaba la misma cantidad de segmentos y se capturaban los `:params`, lo que producía falsos positivos (p. ej. patrón `/users/:id` con URL `/posts/99`). Contrato acotado: **literales del patrón + captura de parámetros**.
-* **`determineRoute` / núcleo:** se eliminó el `console.log` de depuración del path relativo. Los logs de demo quedan solo en `sandbox.ts`.
+
+- **Match parametrizado (`getValidateRoute`):** los segmentos **estáticos** del patrón deben coincidir con la URL.
+  - **Antes:** solo se exigía la misma cantidad de segmentos y se capturaban los `:params` → falsos positivos  
+    (p. ej. patrón `/users/:id` + URL `/posts/99` hacía match).
+  - **Ahora:** aridad + literales del patrón + captura de parámetros.
+  - **Contrato:** `/users/:id` + `/users/99` → sí; `/users/:id` + `/posts/99` → **no**.
+- **Núcleo sin ruido en consola:** eliminado `console.log` de depuración en `determineRoute`. Los logs de demo permanecen solo en `sandbox.ts`.
 
 ### Added
-* **Batería de pruebas** (`tests/`): `lexer.test.mjs`, `router.test.mjs`, `base-url.test.mjs`, `setup-dom.mjs` — API pública vía `dist/`, mocks de DOM, **52 tests** (Node.js `node:test`).
-* **Scripts** en `package.json`: `test` y `test:build`.
-* **Documentación de uso:**
-  * [docs/TUTORIAL.md](docs/TUTORIAL.md) — mini-tutorial (propósito UI↔backend, no SSR, meta `dlroute:base-url`, cajones 0/1, contrato de match).
-  * [docs/README.md](docs/README.md) — índice de docs del paquete.
-  * [tests/README.md](tests/README.md) — cómo ejecutar y leer la suite.
-* **JSDoc actualizado** en `lexer.ts`, `router.ts`, `base-url.ts` y `type.ts` (alineado al comportamiento real; posicionamiento: enrutador de **UI en el navegador**, agnóstico de framework; HTTP/SSR = `dlunire/dlroute` en servidor).
-* **README del paquete** reescrito: posicionamiento, API esencial, enlaces al tutorial y al monorepo.
+
+- **Suite de tests** (`tests/`), API pública vía `dist/`, mocks de DOM:
+  - `tests/lexer.test.mjs`
+  - `tests/router.test.mjs`
+  - `tests/base-url.test.mjs`
+  - `tests/setup-dom.mjs`
+  - `tests/README.md`
+  - **52** casos con el runner nativo de Node.js (`node:test`).
+- **Scripts** en `package.json`:
+  - `pnpm test` → `node --test tests/*.test.mjs`
+  - `pnpm test:build` → build + tests
+- **Documentación de uso:**
+  - [`docs/TUTORIAL.md`](docs/TUTORIAL.md) — mini-tutorial (meta `dlroute:base-url`, cajones `0-`/`1-`, contrato de match, acoplar framework).
+  - [`docs/README.md`](docs/README.md) — índice de documentación del paquete.
+- **JSDoc** revisado en `lexer.ts`, `router.ts`, `base-url.ts` y `type.ts` (comportamiento real y límites del diseño).
 
 ### Changed
-* **README:** deja de presentarse como “router SPA genérico”; se documenta el diseño real (puente cliente/backend para UI, `component: unknown`, sin pretender SSR).
-* **Documentación del match:** se aclara que el lookup estático (`0-${uri}`) no sustituye la validación de literales **dentro** de un patrón `1-…` (esa validación ocurre en `getValidateRoute`).
+
+- **README:** reescrito. Deja de presentarse como router SPA genérico; documenta el diseño real:
+  - puente **cliente ↔ backend** para **UI**;
+  - `component: unknown` (agnóstico de framework);
+  - **sin pretender SSR** (HTTP/SSR = `dlunire/dlroute` en servidor);
+  - enlaces internos del repo + enlaces públicos a `github.com/dlunire`.
+- **Documentación del despacho:** se aclara que el lookup estático `routes['0-' + uri]` **no** valida literales dentro de un patrón `1-…`; esa validación ocurre en `getValidateRoute`.
 
 ### Notes
-* Gramática de cliente: params con prefijo `:nombre`. No es la misma sintaxis de plantilla que el PHP (`{id}`), aunque la normalización de path busca alinearse con el ecosistema DLUnire.
-* Enlaces de ecosistema en la documentación del paquete apuntan a repositorios públicos (`github.com/dlunire/…`), no a rutas del monorepo local (este repo es independiente: `dlunire/front-dlroute`).
+
+- Gramática de path en cliente: parámetros con prefijo `:nombre` (p. ej. `:id`).  
+  En el backend PHP las plantillas suelen usar `{id}`: misma idea de enrutamiento, **sintaxis de plantilla distinta**.
+- Este repositorio es independiente (`dlunire/front-dlroute`). La documentación no depende de rutas de un monorepo local.
 
 ---
-
 
 ## [2.0.0] - 2026-07-05
 
 ### BREAKING CHANGES
-* **Licencia**: Se cambió la licencia del paquete de `MIT` a **`AGPL-3.0-or-later`**. Este cambio forma parte de la adopción de un modelo de licenciamiento dual para todo el ecosistema DLUnire (código abierto vía AGPL-3.0 + licencias comerciales para uso en productos de código cerrado). Cualquier uso en un producto propietario —incluido el acceso por red (SaaS)— sin publicar el código fuente correspondiente requiere una licencia comercial. Ver [`LICENSE`](LICENSE). El campo `license` en `package.json` fue actualizado en consecuencia.
+
+- **Licencia:** de `MIT` a **`AGPL-3.0-or-later`**, dentro del modelo dual del ecosistema DLUnire (AGPL + licencia comercial para uso cerrado / SaaS sin publicar fuentes). Ver [`LICENSE`](LICENSE). Campo `license` actualizado en `package.json`.
 
 ---
 
 ## [1.0.3] - 2026-07-02
 
 ### Fixed
-* **base-url**: Se corrigió un fallo crítico de redundancia en la manipulación de cadenas dentro de la función `determineRoute()`. Al operar sobre un *Base URL* raíz (`/`), el algoritmo anteponía erróneamente un carácter diagonal extra, generando rutas duplicadas (`//ruta`) que provocaban un fallo de coincidencia (*hash table miss*) en el mapa estricto del despachador (`router.ts`). Resuelto mediante optimización directa sobre los límites de extracción de la subcadena nativa.
+
+- **`determineRoute` (base-url):** con base URL raíz (`/`) se anteponía un `/` de más (`//ruta`), provocando *miss* en el mapa de rutas estáticas del despachador. Corregida la extracción del path relativo.
 
 ### Changed
-* **package.json**: Se removió la autodependencia circular recursiva (`"@dlunire/front-dlroute": "link:"`) que causaba conflictos cíclicos de resolución en entornos locales de gestores de paquetes.
-* **Refactor de Arquitectura**: Se migró la dependencia de `vite` desde el bloque de producción (`dependencies`) hacia el entorno de desarrollo (`devDependencies`), blindando la filosofía fundamental de **Zero-Dependencies (Cero Dependencias Externas)** del paquete en producción.
-* **tsconfig.json**: Se actualizó la propiedad `moduleResolution` de `"bundler"` a `"NodeNext"` para dar soporte nativo estricto al estándar ECMAScript Modules (ESM), permitiendo la correcta validación por parte del compilador y el linter de los archivos de origen con extensiones `.js` explícitas.
+
+- **package.json:** eliminada la autodependencia circular `"@dlunire/front-dlroute": "link:"`.
+- **Dependencias:** `vite` pasa a `devDependencies` (cero dependencias de runtime en producción).
+- **tsconfig:** `moduleResolution` de `"bundler"` a `"NodeNext"` para ESM estricto (extensiones `.js` en imports).
 
 ---
 
 ## [1.0.1] - 2026-06-24
 
 ### Changed
-* **Core**: Ajustes internos de empaquetado y optimización en las funciones de exportación de instantáneas del analizador léxico.
+
+- Ajustes de empaquetado y snapshots del analizador léxico.
 
 ---
 
 ## [1.0.0] - 2026-06-20
 
 ### Added
-* **Autómata Finito y Analizador Léxico**: Lanzamiento oficial de la arquitectura base del enrutador frontend de alto rendimiento libre de expresiones regulares (RegEx).
-* **Tokenización Semántica**: Implementación del *scanner* carácter por carácter capaz de clasificar componentes en literales estáticos y parámetros dinámicos con complejidad lineal $O(n)$.
-* **Despachador Óptimo**: Estructura de resolución en dos fases con priorización de rutas estáticas mediante búsquedas directas en tablas hash de complejidad promedio $O(1)$.
-* **Tipado Estricto**: Mapeo completo e independiente de frameworks (`unknown component`), diseñado para la integración directa con ecosistemas de renderizado cliente y servidores locales.
+
+- Analizador léxico de path por **autómata** (sin expresiones regulares).
+- Tokenización Static / Parameter (`:nombre`), complejidad lineal en la longitud del path.
+- Despacho en dos fases: estáticas por lookup O(1); parametrizadas por comparación de segmentos.
+- API agnóstica de framework (`component: unknown`).
+
+---
+
+## Enlaces de comparación
+
+- [Unreleased]: https://github.com/dlunire/front-dlroute/compare/v2.0.2...HEAD
+- [2.0.2]: https://github.com/dlunire/front-dlroute/compare/v2.0.1...v2.0.2
+- [2.0.1]: https://github.com/dlunire/front-dlroute/compare/v2.0.0...v2.0.1
+- [2.0.0]: https://github.com/dlunire/front-dlroute/compare/v1.0.3...v2.0.0
+- [1.0.3]: https://github.com/dlunire/front-dlroute/compare/v1.0.1...v1.0.3
+- [1.0.1]: https://github.com/dlunire/front-dlroute/compare/v1.0.0...v1.0.1
+- [1.0.0]: https://github.com/dlunire/front-dlroute/releases/tag/v1.0.0
