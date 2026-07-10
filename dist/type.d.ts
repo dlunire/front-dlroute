@@ -21,38 +21,38 @@
  * <https://www.gnu.org/licenses/>.
  */
 /**
- * Clasificación léxica de los segmentos reconocidos por el analizador
- * de rutas.
+ * @packageDocumentation
  *
- * El tipo se determina durante la fase de análisis léxico y representa
- * la función sintáctica que desempeña cada segmento dentro de una ruta.
- * Esto permite que las etapas posteriores del motor de enrutamiento
- * trabajen sobre tokens ya clasificados, evitando reinterpretar los
- * lexemas durante la resolución de rutas.
+ * Tipos del enrutador cliente `@dlunire/front-dlroute`.
+ *
+ * Gramática de segmentos de path (cliente):
+ * - literal → {@link TokenType.Static}
+ * - prefijo `:` + nombre → {@link TokenType.Parameter} (p. ej. `:id`)
+ *
+ * Nota: en el backend PHP (`dlunire/dlroute`) los params de plantilla suelen
+ * escribirse `{id}`; aquí la gramática de UI usa `:id`. La **normalización**
+ * de path busca alinearse; la sintaxis de plantilla no es idéntica carácter a carácter.
+ */
+/**
+ * Clasificación de un segmento de path tras el análisis léxico.
+ *
+ * También etiqueta una **ruta completa** en el registro:
+ * - `Static` (0) — ningún segmento param → clave de tabla `0-…`
+ * - `Parameter` (1) — al menos un `:param` → clave `1-…`
  */
 export declare enum TokenType {
     /**
-     * Segmento literal de la ruta.
-     *
-     * Debe coincidir exactamente con el segmento correspondiente de la
-     * ruta analizada.
+     * Segmento literal. En match de patrones, la URL debe traer el mismo lexema.
      *
      * @example
-     * /users/profile
-     * // "users" y "profile" son segmentos estáticos.
+     * /users/profile → "users" y "profile" son Static
      */
     Static = 0,
     /**
-     * Segmento parametrizado.
-     *
-     * Representa un valor dinámico dentro de la ruta. Su identificación
-     * se realiza durante el análisis léxico a partir de la gramática del
-     * lenguaje de rutas (por ejemplo, un segmento cuyo primer carácter
-     * es `:`).
+     * Segmento dinámico (primer carácter `:` y nombre no vacío).
      *
      * @example
-     * /users/:id
-     * // ":id" es un parámetro.
+     * /users/:id → ":id" es Parameter
      */
     Parameter = 1
 }
@@ -114,7 +114,12 @@ export interface ValidatedRoute {
     validated: boolean;
     uri: string | null;
 }
+/**
+ * Resultado de `dispatch()`: recurso de UI + validación/params.
+ * El núcleo no renderiza; la capa de presentación interpreta `component`.
+ */
 export interface Dispatch {
     validated: ValidatedRoute;
+    /** Recurso registrado con `route()`, o `null` si no hubo match. */
     component: unknown;
 }

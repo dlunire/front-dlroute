@@ -21,9 +21,27 @@
  * <https://www.gnu.org/licenses/>.
  */
 
+/**
+ * @packageDocumentation
+ *
+ * Analizador léxico de **paths** para el enrutador cliente de DLUnire.
+ *
+ * Implementa un recorrido carácter a carácter (autómata / scanner) **sin
+ * expresiones regulares**: clasifica segmentos como estáticos o parámetros
+ * (`:nombre`), normaliza `//`, recorta el query (`?…`) y sustituye espacios
+ * por `_` dentro de un segmento.
+ *
+ * El estado (`offset`, `tokens`, `input`) vive en el módulo (equivalente a
+ * propiedades de instancia en PHP); cada análisis público reinicia estado y
+ * devuelve **snapshots** (`[...tokens]`) para no compartir el buffer interno.
+ *
+ * @see getTokensFromURI
+ * @see parseRoute
+ */
+
 import { TokenType, type RouteType, type Token } from "./type.js";
 
-/** Tokens  capturados durante el análisis léxico */
+/** Tokens capturados durante el análisis léxico en curso. */
 const tokens: Token[] = [];
 
 /** Posición del cursor del autómata. */
@@ -127,21 +145,21 @@ function resetState(): void {
  * y delimitadores, y extrae los segmentos intermedios para su procesamiento.
  * Se detiene al encontrar el inicio de un query string (`?`).
  *
- * @param uri - URI a analizar. Si se omite o está vacía, se usa el valor
- *              actual de la variable global `input`.
+ * @param uri - Path a analizar. Tras {@link resetState}, `input` queda vacío;
+ *              si `uri` es `''` el buffer queda como `//` y no se emiten tokens
+ *              (URI canónica resultante `/`).
  *
  * @remarks
- * **Reinicio de estado:** cada invocación de `scanner` llama a
- * {@link resetState}, garantizando que cada análisis es idempotente y
- * autocontenido: nunca acumula tokens de análisis anteriores ni hereda
- * un cursor desfasado que pudiera dejar al bucle principal sin
- * ejecutarse. No debe invocarse directamente desde fuera del módulo;
- * los puntos de entrada públicos son {@link getTokensFromURI},
- * {@link getTokensFromURL} y {@link getURIFromURL}.
+ * Cada llamada reinicia estado. Uso interno: preferir {@link getTokensFromURI},
+ * {@link getURIFromURI}, {@link getTokensFromURL}, {@link getURIFromURL}.
+ *
+ * No usa `RegExp`: solo comparación de caracteres y subcadenas.
  */
 function scanner(uri: string = ''): void {
     resetState();
 
+    // Tras reset, `input` es ''. El ternario conserva la forma histórica del
+    // envoltorio `/${…}/` usado por el autómata.
     input = `/${uri.trim() === '' ? input : uri}/`;
     size = input.length;
 

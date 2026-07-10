@@ -21,39 +21,34 @@
  * <https://www.gnu.org/licenses/>.
  */
 
+/**
+ * @packageDocumentation
+ *
+ * Contexto de **URL base** y path relativo de la aplicación en el navegador.
+ *
+ * El backend DLUnire inyecta `<meta name="dlroute:base-url" content="…">` en el
+ * HTML. Así el cliente calcula la ruta *dentro de la app* (p. ej. `/users/10`)
+ * aunque el documento se sirva bajo un subpath (`/app/...`).
+ *
+ * SSR y enrutamiento HTTP no viven aquí: los resuelve `dlunire/dlroute` en servidor.
+ */
+
 import * as parsing from "./lexer.js";
 import type { CurrentRouteType, Token } from "./type.js";
 
 /**
- * Obtiene la URI canónica configurada como base del enrutador.
+ * URI canónica del `content` del meta `dlroute:base-url` (solo pathname normalizado).
  *
- * La URI se extrae del elemento:
+ * @example
+ * // <meta name="dlroute:base-url" content="https://ejemplo.com/app">
+ * // → "/app"
  *
- * ```html
- * <meta name="dlroute:base-url" content="https://ejemplo.com/app">
- * ```
- *
- * El valor del atributo `content` se interpreta como una URL absoluta y
- * se normaliza mediante {@link parsing.getURIFromURL}, garantizando que
- * la URI resultante utilice exactamente la misma semántica de
- * normalización que el resto del sistema de enrutamiento (eliminación de
- * separadores redundantes, normalización de espacios y descarte del
- * query string).
- *
- * Esta metadata es generada por el backend y representa la ruta base
- * sobre la que opera el router del cliente. No está pensada para ser
- * definida manualmente por el desarrollador durante la ejecución de la
- * aplicación.
- *
- * @returns La URI base en su forma canónica.
- *
- * @throws {Error} Si no existe el elemento
- *         `<meta name="dlroute:base-url">` en el documento.
+ * @returns Path base canónico (p. ej. `/` o `/app`).
+ * @throws {Error} Si falta el meta en el documento.
  *
  * @remarks
- * La URI devuelta se utiliza posteriormente para calcular la ruta
- * relativa de la petición actual mediante la diferencia entre la URI
- * canónica actual y esta URI base.
+ * Usado por {@link determineRoute} para restar el prefijo de la app del path actual.
+ * Preferible que el backend inyecte el meta; en demos locales puede fijarse a mano.
  */
 function getCanonicalURI(): string {
     const metaElement: HTMLElement | null = document.querySelector<HTMLMetaElement>('meta[name="dlroute:base-url"]');
@@ -110,96 +105,52 @@ export function getBaseURL(): string {
 }
 
 /**
- * Obtiene la ruta relativa sobre la que debe operar el router del
- * cliente.
+ * Path relativo actual de la app + tokens (entrada de {@link dispatch}).
  *
- * La ruta se calcula a partir de la URL actual del navegador y de la
- * URL base de la aplicación, ambas previamente normalizadas mediante el
- * analizador léxico de DLRoute. El resultado corresponde al segmento de
- * la URI que permanece después de eliminar el prefijo representado por
- * la ruta base.
+ * @returns `{ uri, tokens }` con `uri` canónica relativa a la base del meta.
+ * @throws {Error} Si falta `<meta name="dlroute:base-url">` (vía {@link getCanonicalURI}).
  *
- * @returns La ruta relativa en su forma canónica.
- *
- * @remarks
- * Esta función constituye el punto de entrada público para obtener la
- * ruta actual del cliente. La lógica de cálculo se delega en
- * {@link determineRoute}, manteniendo encapsulado el algoritmo de
- * determinación de la ruta y ofreciendo una API estable al consumidor.
+ * @example
+ * // meta content="https://example.com/app"
+ * // location https://example.com/app/users/10
+ * getRoute(); // { uri: '/users/10', tokens: [...] }
  */
 export function getRoute(): CurrentRouteType {
     return determineRoute();
 }
 
 /**
- * Determina la ruta relativa de la petición actual respecto a la ruta
- * base de la aplicación.
+ * Resta el path base (meta) del path actual (`location`) y tokeniza el resto.
  *
- * Para ello, obtiene la URI canónica de la URL actual del navegador y
- * la URI base definida por el backend, ambas previamente normalizadas
- * por el analizador léxico de DLRoute. A continuación, recorre ambas
- * cadenas desde el inicio hasta localizar el primer carácter en el que
- * difieren; dicho punto constituye el límite entre la ruta base y la
- * ruta relativa.
+ * Ambas cadenas se normalizan con el lexer antes de comparar carácter a carácter.
  *
- * El segmento restante de la URI actual se devuelve como la ruta sobre
- * la que deberá operar el router del cliente.
- *
- * @returns La ruta relativa en su forma canónica, siempre con un `/`
- *          inicial.
- *
- * @remarks
- * El algoritmo realiza una comparación secuencial de caracteres en
- * lugar de comparar token a token. Esto es posible porque tanto la URI
- * actual como la URI base ya fueron normalizadas previamente mediante
- * el analizador léxico, por lo que ambas comparten la misma
- * representación canónica antes de calcular la ruta relativa.
- *
- * La URI base es inyectada por el backend a través de la metadata
- * `dlroute:base-url`. Si la petición corresponde a una ruta distinta de
- * la aplicación, normalmente el servidor responderá antes con un error
- * de enrutamiento (por ejemplo, `404 Not Found`), por lo que esta
- * función opera sobre un contexto de rutas ya validado.
- *
- * Como medida de consistencia, el valor devuelto siempre comienza con
- * `/`, incluso cuando la primera diferencia entre ambas URIs ocurre en
- * una posición distinta del separador de segmentos.
+ * @internal
  */
 function determineRoute(): CurrentRouteType {
-    /** URL base del ecosistema DLUnire */
     const dlunire: string = 'https://dlunire.dev';
 
-    /** Tokens capturados */
+    /** Path canónico de la URL del navegador. */
     const currentURI: string = parsing.getURIFromURL(globalThis.location?.href ?? dlunire);
 
-    /** URI formada a partir los tokens capturados durante el análisis léxico */
-    // const currentURI: string = `/${tokens.map((token) => token.lexeme).join("/")}`;
-
-    /** URI Canónico */
+    /** Path canónico de la base de la app (meta). */
     const uri: string = getCanonicalURI();
 
-    /** Posición del cursor del autómata */
     let offset = 0;
-
     const { length: size } = uri;
 
     while (offset < size) {
         if (uri[offset] !== currentURI[offset]) {
             break;
         }
-
         offset++;
     }
 
-    /** Ruta determinada durante el análisis  */
     const route: string = currentURI.substring(offset);
 
-    /** Ruta procesada */
     const processedRoute = route[0] === "/"
         ? route
         : `${currentURI.substring(offset - 1)}`;
 
-    /** Token capturado durante el análisis léxico de la ruta procesada */
     const tokens: Token[] = parsing.getTokensFromURI(processedRoute);
 
     return {
@@ -208,6 +159,11 @@ function determineRoute(): CurrentRouteType {
     };
 }
 
+/**
+ * URL absoluta de un asset bajo la base de la app (`getBaseURL` + path canónico).
+ *
+ * @param uri - Path de recurso (p. ej. `/img/logo.png`); se normaliza con el lexer.
+ */
 export function asset(uri: string): string {
     return `${getBaseURL()}${parsing.getURIFromURI(uri)}`;
 }

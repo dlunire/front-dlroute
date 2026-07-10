@@ -51,5 +51,5 @@ pnpm test
 ## Notas
 
 - `dispatch()` depende de `getRoute()` → hace falta meta `dlroute:base-url` (el mock la instala).
-- El paquete hace `console.log({ processedRoute })` en `determineRoute`; los tests de router/base-url lo silencian.
-- Archivos legados `claims.*.test.mjs` (si existen) pueden eliminarse; la suite canónica es `lexer` / `router` / `base-url`.
+- Tutorial de uso: [../docs/TUTORIAL.md](../docs/TUTORIAL.md)
+- Suite canónica: `lexer` / `router` / `base-url`.

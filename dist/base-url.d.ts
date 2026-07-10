@@ -47,22 +47,20 @@ import type { CurrentRouteType } from "./type.js";
  */
 export declare function getBaseURL(): string;
 /**
- * Obtiene la ruta relativa sobre la que debe operar el router del
- * cliente.
+ * Path relativo actual de la app + tokens (entrada de {@link dispatch}).
  *
- * La ruta se calcula a partir de la URL actual del navegador y de la
- * URL base de la aplicación, ambas previamente normalizadas mediante el
- * analizador léxico de DLRoute. El resultado corresponde al segmento de
- * la URI que permanece después de eliminar el prefijo representado por
- * la ruta base.
+ * @returns `{ uri, tokens }` con `uri` canónica relativa a la base del meta.
+ * @throws {Error} Si falta `<meta name="dlroute:base-url">` (vía {@link getCanonicalURI}).
  *
- * @returns La ruta relativa en su forma canónica.
- *
- * @remarks
- * Esta función constituye el punto de entrada público para obtener la
- * ruta actual del cliente. La lógica de cálculo se delega en
- * {@link determineRoute}, manteniendo encapsulado el algoritmo de
- * determinación de la ruta y ofreciendo una API estable al consumidor.
+ * @example
+ * // meta content="https://example.com/app"
+ * // location https://example.com/app/users/10
+ * getRoute(); // { uri: '/users/10', tokens: [...] }
  */
 export declare function getRoute(): CurrentRouteType;
+/**
+ * URL absoluta de un asset bajo la base de la app (`getBaseURL` + path canónico).
+ *
+ * @param uri - Path de recurso (p. ej. `/img/logo.png`); se normaliza con el lexer.
+ */
 export declare function asset(uri: string): string;

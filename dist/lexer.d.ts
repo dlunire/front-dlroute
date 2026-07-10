@@ -20,6 +20,23 @@
  * License along with this program. If not, see
  * <https://www.gnu.org/licenses/>.
  */
+/**
+ * @packageDocumentation
+ *
+ * Analizador léxico de **paths** para el enrutador cliente de DLUnire.
+ *
+ * Implementa un recorrido carácter a carácter (autómata / scanner) **sin
+ * expresiones regulares**: clasifica segmentos como estáticos o parámetros
+ * (`:nombre`), normaliza `//`, recorta el query (`?…`) y sustituye espacios
+ * por `_` dentro de un segmento.
+ *
+ * El estado (`offset`, `tokens`, `input`) vive en el módulo (equivalente a
+ * propiedades de instancia en PHP); cada análisis público reinicia estado y
+ * devuelve **snapshots** (`[...tokens]`) para no compartir el buffer interno.
+ *
+ * @see getTokensFromURI
+ * @see parseRoute
+ */
 import { type RouteType, type Token } from "./type.js";
 /**
  * Reconstruye la URI canónica (depurada y normalizada) a partir de los

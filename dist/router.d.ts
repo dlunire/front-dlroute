@@ -22,44 +22,22 @@
  */
 import { type Dispatch, type RouteType } from "./type.js";
 /**
- * Registra una nueva ruta dentro de la tabla interna del router.
+ * Registra una ruta y el recurso de UI asociado.
  *
- * La ruta es analizada previamente por el parser para obtener su
- * representación canónica, determinar si es estática o
- * parametrizada, y generar la información estructurada que utilizará
- * el despachador durante la resolución de rutas.
+ * - Sin segmentos `:nombre` → tipo estático (`0-…`); match por igualdad total del path.
+ * - Con al menos un `:nombre` → tipo param (`1-…`); match estructural en {@link dispatch}.
+ * - `route('/users/99', fn)` es **estática** (el número no es dinámico; solo `:` marca param).
  *
- * Una vez procesada, se asocia el recurso suministrado mediante
- * `component` y la ruta queda indexada utilizando una clave compuesta
- * por su tipo y su URI canónica (`<tipo>-<uri>`), permitiendo una
- * búsqueda eficiente durante el despacho.
+ * @param uri - Plantilla de path (p. ej. `/users`, `/users/:id`). Se normaliza (`//`, espacios, etc.).
+ * @param component - Recurso de UI (`unknown`): componente, función, módulo lazy, etc.
+ *                    El núcleo no renderiza; solo lo devuelve en {@link dispatch}.
  *
- * @param uri - Ruta a registrar dentro del router. Puede contener
- *              segmentos estáticos y parametrizados conforme a la
- *              gramática del lenguaje de rutas de DLRoute.
- *
- * @param component - Recurso asociado a la ruta registrada. Se declara
- *                    como `unknown` para mantener el núcleo del router
- *                    independiente de cualquier framework o biblioteca
- *                    de interfaz de usuario. El consumidor puede
- *                    asociar componentes, funciones, objetos, módulos
- *                    cargados dinámicamente o cualquier otra
- *                    representación que considere apropiada.
- *
- * @remarks
- * Esta función forma parte de la fase de construcción del router y no
- * participa en la resolución de rutas. Su única responsabilidad es
- * registrar rutas ya analizadas dentro de la tabla interna utilizada
- * posteriormente por {@link dispatch}.
- *
- * La representación almacenada proviene exclusivamente de
- * {@link parsing.parseRoute}, garantizando que todas las rutas
- * registradas compartan la misma semántica de normalización empleada
- * durante el despacho.
+ * @throws {Error} Si la plantilla incluye un parámetro sin nombre (`:` a secas).
  *
  * @example
- * route('/users', UsersComponent);
- * route('/users/:id', UserDetailComponent);
+ * route('/users', UsersView);
+ * route('/users/:id', UserDetailView);
+ * route('/users/99', SpecialUserView); // estática exacta, no es param
  */
 export declare function route(uri: string, component: unknown): void;
 /**
@@ -126,64 +104,33 @@ export declare function getRoutes(): {
     [x: string]: RouteType;
 };
 /**
- * Resuelve la ruta correspondiente a la URL actual y devuelve el
- * recurso asociado a ella.
+ * Resuelve el path **relativo actual** (vía {@link routing.getRoute}) y
+ * devuelve el recurso de UI registrado y los parámetros capturados.
  *
- * El despachador constituye el núcleo del sistema de enrutamiento del
- * cliente. A partir de la ruta actual obtenida mediante
- * {@link routing.getRoute}, determina cuál de las rutas previamente
- * registradas representa la mejor coincidencia y devuelve tanto la
- * información de validación como el recurso asociado.
+ * **No es SSR ni despacho HTTP.** Eso lo hace `dlunire/dlroute` en el servidor.
+ * Aquí solo se elige *qué pieza de interfaz* corresponde al path del navegador.
  *
- * El proceso de resolución se realiza en dos etapas:
+ * Orden de resolución:
+ * 1. **Cajón estático (`0-`):** lookup `routes['0-' + uri]` — igualdad total del path, O(1).
+ * 2. **Cajón param (`1-`):** recorre rutas parametrizadas; {@link getValidateRoute}
+ *    exige misma aridad, literales del patrón iguales y captura de `:params`.
  *
- * 1. Se intenta localizar una coincidencia exacta entre las rutas
- *    estáticas mediante una búsqueda directa sobre la tabla interna.
- * 2. Si no existe una coincidencia estática, se recorren únicamente las
- *    rutas parametrizadas para determinar si alguna coincide con la
- *    estructura de la ruta actual y extraer los valores de sus
- *    parámetros.
+ * Contrato (literales del patrón):
+ * - `/users/:id` + URL `/users/99` → match, `{ id: '99' }`
+ * - `/users/:id` + URL `/posts/99` → **no** match
  *
- * Si ninguna ruta coincide, la función devuelve un resultado no
- * validado y un recurso nulo (`component = null`), permitiendo que la
- * capa superior decida cómo gestionar la navegación (por ejemplo,
- * mostrando una vista 404).
- *
- * @returns Información del resultado del despacho. Cuando la resolución
- *          tiene éxito, el objeto contiene:
- *
- * - `validated`: información sobre la ruta coincidente y los parámetros
- *   extraídos.
- * - `component`: recurso asociado a la ruta registrada.
- *
- * Si no existe ninguna coincidencia, `validated.validated` será
- * `false`, `validated.uri` será `null` y `component` tendrá el valor
- * `null`.
+ * @returns {@link Dispatch}: `validated` + `component` (o `component: null` si 404).
  *
  * @remarks
- * Las rutas estáticas tienen prioridad sobre las parametrizadas. Esto
- * permite resolver coincidencias exactas mediante una búsqueda directa
- * sobre la tabla interna (complejidad promedio `O(1)`), reservando el
- * recorrido de las rutas parametrizadas únicamente para aquellos casos
- * en los que no exista una coincidencia literal.
- *
- * El despachador opera exclusivamente sobre la representación producida
- * por el analizador léxico de DLRoute. No interpreta cadenas ni aplica
- * reglas sintácticas propias; consume la URI canónica y los tokens ya
- * clasificados, delegando en {@link getValidateRoute} la extracción de
- * parámetros cuando la ruta registrada es parametrizada.
- *
- * Esta función no realiza el renderizado del recurso devuelto. Su
- * responsabilidad finaliza al determinar qué recurso corresponde a la
- * ruta actual y devolverlo al consumidor.
+ * Requiere meta `dlroute:base-url` en el documento (la usa `getRoute`).
+ * No renderiza: la capa de UI decide qué hacer con `component` y `param`.
  *
  * @example
  * const result = dispatch();
- *
  * if (result.validated.validated) {
- *     render(result.component);
+ *     mount(result.component, result.validated.param);
  * } else {
- *     render(NotFoundView);
+ *     mount(NotFoundView);
  * }
  */
 export declare function dispatch(): Dispatch;

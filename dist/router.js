@@ -20,71 +20,59 @@
  * License along with this program. If not, see
  * <https://www.gnu.org/licenses/>.
  */
+/**
+ * @packageDocumentation
+ *
+ * Despacho de rutas en el **navegador** para UI sobre el ecosistema DLUnire.
+ *
+ * Este módulo **no** sustituye el enrutamiento HTTP del servidor (`dlunire/dlroute`).
+ * Su propósito es resolver *qué recurso de interfaz* corresponde al path actual,
+ * de forma agnóstica al framework: el consumidor acopla Svelte, Vue, React, vanilla
+ * o su propio router de presentación encima de {@link route} / {@link dispatch}.
+ *
+ * Flujo:
+ * 1. {@link route} — registra path canónico + recurso (`component: unknown`).
+ * 2. {@link dispatch} — lee la ruta relativa vía `getRoute()` (meta `dlroute:base-url`)
+ *    y devuelve componente + parámetros capturados.
+ *
+ * @see {@link route}
+ * @see {@link dispatch}
+ */
 import * as parsing from "./lexer.js";
 import * as routing from "./base-url.js";
 import { TokenType } from "./type.js";
 /**
- * Tabla interna de rutas registradas por el router.
+ * Tabla interna de rutas registradas.
  *
- * Cada entrada se indexa mediante una clave compuesta por el tipo de la
- * ruta y su URI canónica (`<tipo>-<uri>`), lo que permite distinguir
- * rutas estáticas y parametrizadas aun cuando compartan una misma forma
- * textual.
+ * Clave: `` `${TokenType}-${uriCanónica}` ``
+ * - `0-/users` — ruta **estática** (ningún segmento `:param`)
+ * - `1-/users/:id` — ruta **parametrizada** (al menos un `:param`)
  *
- * @remarks
- * Esta estructura constituye el registro interno utilizado durante el
- * proceso de construcción del conjunto de rutas. Las claves se generan
- * exclusivamente a partir de la representación canónica producida por el
- * analizador léxico de DLRoute.
+ * Las claves se generan con la URI canónica del lexer (`parseRoute`), no con
+ * el string crudo pasado a {@link route}.
  */
 const routes = {};
 /**
- * Registra una nueva ruta dentro de la tabla interna del router.
+ * Registra una ruta y el recurso de UI asociado.
  *
- * La ruta es analizada previamente por el parser para obtener su
- * representación canónica, determinar si es estática o
- * parametrizada, y generar la información estructurada que utilizará
- * el despachador durante la resolución de rutas.
+ * - Sin segmentos `:nombre` → tipo estático (`0-…`); match por igualdad total del path.
+ * - Con al menos un `:nombre` → tipo param (`1-…`); match estructural en {@link dispatch}.
+ * - `route('/users/99', fn)` es **estática** (el número no es dinámico; solo `:` marca param).
  *
- * Una vez procesada, se asocia el recurso suministrado mediante
- * `component` y la ruta queda indexada utilizando una clave compuesta
- * por su tipo y su URI canónica (`<tipo>-<uri>`), permitiendo una
- * búsqueda eficiente durante el despacho.
+ * @param uri - Plantilla de path (p. ej. `/users`, `/users/:id`). Se normaliza (`//`, espacios, etc.).
+ * @param component - Recurso de UI (`unknown`): componente, función, módulo lazy, etc.
+ *                    El núcleo no renderiza; solo lo devuelve en {@link dispatch}.
  *
- * @param uri - Ruta a registrar dentro del router. Puede contener
- *              segmentos estáticos y parametrizados conforme a la
- *              gramática del lenguaje de rutas de DLRoute.
- *
- * @param component - Recurso asociado a la ruta registrada. Se declara
- *                    como `unknown` para mantener el núcleo del router
- *                    independiente de cualquier framework o biblioteca
- *                    de interfaz de usuario. El consumidor puede
- *                    asociar componentes, funciones, objetos, módulos
- *                    cargados dinámicamente o cualquier otra
- *                    representación que considere apropiada.
- *
- * @remarks
- * Esta función forma parte de la fase de construcción del router y no
- * participa en la resolución de rutas. Su única responsabilidad es
- * registrar rutas ya analizadas dentro de la tabla interna utilizada
- * posteriormente por {@link dispatch}.
- *
- * La representación almacenada proviene exclusivamente de
- * {@link parsing.parseRoute}, garantizando que todas las rutas
- * registradas compartan la misma semántica de normalización empleada
- * durante el despacho.
+ * @throws {Error} Si la plantilla incluye un parámetro sin nombre (`:` a secas).
  *
  * @example
- * route('/users', UsersComponent);
- * route('/users/:id', UserDetailComponent);
+ * route('/users', UsersView);
+ * route('/users/:id', UserDetailView);
+ * route('/users/99', SpecialUserView); // estática exacta, no es param
  */
 export function route(uri, component) {
     const route = parsing.parseRoute(uri);
-    /**
-     * Justo aquí se inyecta el componente, pero la propopiedad `component` tiene
-     * tipo como `unknown` para no ligarla necesariamente a Svelte, ya que la
-     * idea es buscar compatibilidad con otras herramientas.
-     */
+    // `unknown` a propósito: el acoplamiento al framework lo define quien implementa la UI.
     route.component = component;
     routes[`${route.type}-${route.uri}`] = route;
 }
@@ -156,64 +144,33 @@ export function getRoutes() {
     return routes;
 }
 /**
- * Resuelve la ruta correspondiente a la URL actual y devuelve el
- * recurso asociado a ella.
+ * Resuelve el path **relativo actual** (vía {@link routing.getRoute}) y
+ * devuelve el recurso de UI registrado y los parámetros capturados.
  *
- * El despachador constituye el núcleo del sistema de enrutamiento del
- * cliente. A partir de la ruta actual obtenida mediante
- * {@link routing.getRoute}, determina cuál de las rutas previamente
- * registradas representa la mejor coincidencia y devuelve tanto la
- * información de validación como el recurso asociado.
+ * **No es SSR ni despacho HTTP.** Eso lo hace `dlunire/dlroute` en el servidor.
+ * Aquí solo se elige *qué pieza de interfaz* corresponde al path del navegador.
  *
- * El proceso de resolución se realiza en dos etapas:
+ * Orden de resolución:
+ * 1. **Cajón estático (`0-`):** lookup `routes['0-' + uri]` — igualdad total del path, O(1).
+ * 2. **Cajón param (`1-`):** recorre rutas parametrizadas; {@link getValidateRoute}
+ *    exige misma aridad, literales del patrón iguales y captura de `:params`.
  *
- * 1. Se intenta localizar una coincidencia exacta entre las rutas
- *    estáticas mediante una búsqueda directa sobre la tabla interna.
- * 2. Si no existe una coincidencia estática, se recorren únicamente las
- *    rutas parametrizadas para determinar si alguna coincide con la
- *    estructura de la ruta actual y extraer los valores de sus
- *    parámetros.
+ * Contrato (literales del patrón):
+ * - `/users/:id` + URL `/users/99` → match, `{ id: '99' }`
+ * - `/users/:id` + URL `/posts/99` → **no** match
  *
- * Si ninguna ruta coincide, la función devuelve un resultado no
- * validado y un recurso nulo (`component = null`), permitiendo que la
- * capa superior decida cómo gestionar la navegación (por ejemplo,
- * mostrando una vista 404).
- *
- * @returns Información del resultado del despacho. Cuando la resolución
- *          tiene éxito, el objeto contiene:
- *
- * - `validated`: información sobre la ruta coincidente y los parámetros
- *   extraídos.
- * - `component`: recurso asociado a la ruta registrada.
- *
- * Si no existe ninguna coincidencia, `validated.validated` será
- * `false`, `validated.uri` será `null` y `component` tendrá el valor
- * `null`.
+ * @returns {@link Dispatch}: `validated` + `component` (o `component: null` si 404).
  *
  * @remarks
- * Las rutas estáticas tienen prioridad sobre las parametrizadas. Esto
- * permite resolver coincidencias exactas mediante una búsqueda directa
- * sobre la tabla interna (complejidad promedio `O(1)`), reservando el
- * recorrido de las rutas parametrizadas únicamente para aquellos casos
- * en los que no exista una coincidencia literal.
- *
- * El despachador opera exclusivamente sobre la representación producida
- * por el analizador léxico de DLRoute. No interpreta cadenas ni aplica
- * reglas sintácticas propias; consume la URI canónica y los tokens ya
- * clasificados, delegando en {@link getValidateRoute} la extracción de
- * parámetros cuando la ruta registrada es parametrizada.
- *
- * Esta función no realiza el renderizado del recurso devuelto. Su
- * responsabilidad finaliza al determinar qué recurso corresponde a la
- * ruta actual y devolverlo al consumidor.
+ * Requiere meta `dlroute:base-url` en el documento (la usa `getRoute`).
+ * No renderiza: la capa de UI decide qué hacer con `component` y `param`.
  *
  * @example
  * const result = dispatch();
- *
  * if (result.validated.validated) {
- *     render(result.component);
+ *     mount(result.component, result.validated.param);
  * } else {
- *     render(NotFoundView);
+ *     mount(NotFoundView);
  * }
  */
 export function dispatch() {
@@ -257,67 +214,40 @@ export function dispatch() {
     };
 }
 /**
- * Determina si una ruta parametrizada registrada coincide con la ruta
- * actual y, en caso afirmativo, extrae los valores de sus parámetros.
+ * Comprueba si un **patrón parametrizado** registrado coincide con el path actual.
  *
- * La ruta registrada se reconstruye a partir de su clave canónica y se
- * tokeniza nuevamente para obtener su representación léxica. A partir
- * de ella, la función compara su estructura con la de la ruta actual y
- * genera el conjunto de parámetros capturados durante la coincidencia.
+ * Solo se invoca desde {@link dispatch} para claves `1-…`. Las rutas estáticas
+ * (`0-…`) ya se resolvieron por lookup exacto y **no** pasan por aquí.
  *
- * @param uri - Clave canónica de la ruta registrada
- *              (`<tipo>-<uri>`), utilizada para identificar de forma
- *              única la definición almacenada por el router.
+ * @param uri - Clave de tabla (`1-/users/:id`), no el path del navegador.
+ * @param tokens - Tokens del **path actual** (URL visitada), ya tokenizados.
  *
- * @param tokens - Tokens correspondientes a la ruta actualmente
- *                 navegada, previamente obtenidos por el analizador
- *                 léxico.
- *
- * @returns Un objeto {@link ValidatedRoute}. Si ambas rutas poseen la
- *          misma estructura, `validated` será `true`, `uri`
- *          identificará la ruta registrada que produjo la coincidencia
- *          y `param` contendrá los valores capturados para cada
- *          parámetro. En caso contrario, `validated` será `false` y
- *          `uri` tendrá el valor `null`.
+ * @returns {@link ValidatedRoute}:
+ * - match → `validated: true`, `uri` = clave, `param` = valores capturados;
+ * - no match → `validated: false`, `uri: null`, `param: {}`.
  *
  * @remarks
- * Esta función forma parte del proceso interno de despacho y solo se
- * invoca para rutas clasificadas como parametrizadas. Las rutas
- * estáticas ya han sido resueltas previamente mediante una búsqueda
- * directa sobre la tabla interna del router.
+ * Convención de variables en el bucle (fácil de malinterpretar):
+ * - `tokens` / `token` → segmentos de la **URL actual**
+ * - `currentTokens` / `currentToken` → segmentos del **patrón registrado**
+ *   (se re-tokeniza `uri.substring(2)`, p. ej. `/users/:id`)
  *
- * La comparación comienza verificando que ambas rutas posean el mismo
- * número de segmentos. Si la longitud difiere, la coincidencia se
- * descarta inmediatamente sin realizar más comprobaciones.
+ * Criterios de match (todos obligatorios):
+ * 1. Misma cantidad de segmentos.
+ * 2. En cada posición, si el patrón es {@link TokenType.Static}, el lexema
+ *    de la URL debe ser **idéntico** (p. ej. `users` ≠ `posts` → no match).
+ * 3. Si el patrón es {@link TokenType.Parameter}, se captura
+ *    `param[nombreSinDosPuntos] = lexemaDeLaURL`.
  *
- * Una vez validada la estructura, únicamente los segmentos clasificados
- * como {@link TokenType.Parameter} generan capturas. El nombre del
- * parámetro se obtiene eliminando el prefijo `:` del lexema registrado,
- * mientras que el valor corresponde al lexema presente en la ruta
- * actual.
- *
- * La función no modifica el registro interno del router; únicamente
- * construye la información necesaria para que {@link dispatch} pueda
- * devolver el recurso asociado a la ruta coincidente.
+ * El lookup estático de `dispatch` **no** valida los literales internos de un
+ * patrón `1-…`; esa validación ocurre **aquí**.
  *
  * @example
- * // Ruta registrada:
- * // /clients/:id/orders/:order
- *
- * // Ruta actual:
- * // /clients/123/orders/100
- *
- * // Resultado:
- * // {
- * //     param: {
- * //         id: '123',
- * //         order: '100'
- * //     },
- * //     uri: '1-/clients/:id/orders/:order',
- * //     validated: true
- * // }
+ * // patrón 1-/users/:id, URL /users/99  → match, { id: '99' }
+ * // patrón 1-/users/:id, URL /posts/99 → no match
  */
 function getValidateRoute(uri, tokens) {
+    /** Tokens del patrón registrado (plantilla), no de la URL. */
     const currentTokens = parsing.getTokensFromURI(uri.substring(2));
     const { length: currentLength } = currentTokens;
     const { length } = tokens;
@@ -329,7 +259,9 @@ function getValidateRoute(uri, tokens) {
             validated: false
         };
     for (const index in tokens) {
+        /** Segmento de la URL visitada. */
         const token = tokens[index];
+        /** Segmento del patrón registrado. */
         const currentToken = currentTokens[index];
         const currentLexeme = currentToken.lexeme.substring(1);
         const lexeme = token.lexeme;

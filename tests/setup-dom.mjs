@@ -67,7 +67,10 @@ export function installBrowserMocks({
   };
 }
 
-/** Silencia console.log del paquete (p. ej. determineRoute) durante un test. */
+/**
+ * Silencia console.log durante un test (el núcleo del paquete ya no loguea;
+ * útil si sandbox u otro código colateral escribe a consola).
+ */
 export function silenceConsoleLog() {
   const original = console.log;
   console.log = () => {};
