@@ -1,7 +1,7 @@
 # Documentación — `@dlunire/front-dlroute`
 
 Enrutamiento de **UI en el navegador**, alineado al backend DLUnire.  
-**No es SSR ni despacho HTTP** (eso es [`dlunire/dlroute`](../../dlroute/docs/README.md) en el servidor).
+**No es SSR ni despacho HTTP** (eso es [`dlunire/dlroute`](https://github.com/dlunire/dlroute) en el servidor).
 
 ## Empezar aquí
 
@@ -20,12 +20,15 @@ Enrutamiento de **UI en el navegador**, alineado al backend DLUnire.
 | `base-url.ts` | Meta `dlroute:base-url`, path relativo, `asset` |
 | `type.ts` | Tipos y gramática Static / Parameter |
 
-## En el monorepo
+## Ecosistema
 
-- Mapa del workspace: [README del monorepo](../../../../README.md)  
-  *(desde `docs/`: `../` = paquete, `../../` = front, `../../../` = Libraries, `../../../../` = my-projects)*  
-- Arquitectura: [Documentos/ARQUITECTURA-DLUNIRE.md](../../../../Documentos/ARQUITECTURA-DLUNIRE.md)  
-- HTTP servidor (pareja de este paquete): [Libraries/dlroute/docs](../../../dlroute/docs/README.md)
+| Recurso | Enlace |
+|---------|--------|
+| HTTP servidor (pareja) | [github.com/dlunire/dlroute](https://github.com/dlunire/dlroute) |
+| Organización | [github.com/dlunire](https://github.com/dlunire) |
+| npm | [@dlunire/front-dlroute](https://www.npmjs.com/package/@dlunire/front-dlroute) |
+
+> En un checkout del monorepo local también existen `Documentos/ARQUITECTURA-DLUNIRE.md` y el README de la raíz del workspace; no forman parte de este repositorio npm/git.
 
 ## Contrato de match (recordatorio)
 

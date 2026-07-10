@@ -17,8 +17,8 @@ La mayoría de routers van **acoplados a un framework**. Este se diseñó al rev
 | **[docs/TUTORIAL.md](docs/TUTORIAL.md)** | Mini-tutorial (recomendado) |
 | **[docs/README.md](docs/README.md)** | Índice de docs del paquete |
 | **[tests/README.md](tests/README.md)** | Batería de pruebas |
-| [Monorepo](../../../README.md) | Mapa del workspace DLUnire |
-| [dlroute (servidor)](../../dlroute/docs/README.md) | Pareja HTTP / no SSR aquí |
+| [dlunire/dlroute](https://github.com/dlunire/dlroute) | Pareja HTTP en servidor (no SSR aquí) |
+| [Org DLUnire](https://github.com/dlunire) | Ecosistema y demás paquetes |
 
 Resumen en 30 segundos:
 
