@@ -1,6 +1,6 @@
 # `@dlunire/front-dlroute`
 
-[![Socket Badge](https://badge.socket.dev/npm/package/@dlunire/front-dlroute/2.1.0)](https://badge.socket.dev/npm/package/@dlunire/front-dlroute/2.1.0)
+[![Socket Badge](https://badge.socket.dev/npm/package/@dlunire/front-dlroute/2.1.0)](https://socket.dev/npm/package/@dlunire/front-dlroute/overview/2.1.0)
 
 **Resolución de rutas en el navegador para UI**, alineada al backend [DLUnire](https://github.com/dlunire).
 
