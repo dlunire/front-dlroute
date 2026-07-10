@@ -39,10 +39,10 @@ El backend debería inyectarla. En local/demo:
 App bajo subpath:
 
 ```html
-<meta name="dlroute:base-url" content="https://midominio.com/app" />
+<meta name="dlroute:base-url" content="https://miserver.com/app" />
 ```
 
-Así `https://midominio.com/app/users/10` se resuelve como path de app **`/users/10`**.
+Así `https://miserver.com/app/users/10` se resuelve como path de app **`/users/10`**.
 
 ---
 
