@@ -23,8 +23,8 @@
 
 import * as routing from "./index";
 
-routing.route("/test", function () {
-    console.log({ test: true, message: "Funciona" });
+routing.route("/users/:id", function () {
+    console.log({ test: true, route: '/users/:id' });
 });
 
 let component: Function | null = routing.dispatch().component as typeof Function | null;

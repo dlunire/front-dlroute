@@ -202,7 +202,6 @@ function determineRoute(): CurrentRouteType {
     /** Token capturado durante el análisis léxico de la ruta procesada */
     const tokens: Token[] = parsing.getTokensFromURI(processedRoute);
 
-    console.log({ processedRoute });
     return {
         uri: processedRoute,
         tokens: [...tokens]

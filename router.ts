@@ -354,6 +354,14 @@ function getValidateRoute(uri: string, tokens: Token[]): ValidatedRoute {
         const currentLexeme: string = currentToken.lexeme.substring(1);
         const lexeme: string = token.lexeme;
 
+        if (currentToken.type === TokenType.Static && currentToken.lexeme !== lexeme) {
+            return {
+                param: {},
+                uri: null,
+                validated: false
+            }
+        };
+
         if (currentToken.type !== TokenType.Parameter) continue;
         param[currentLexeme] = lexeme;
     }
