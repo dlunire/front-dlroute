@@ -4,6 +4,32 @@ Todos los cambios notables en este proyecto serán documentados en este archivo 
 
 ---
 
+## [2.0.1] - 2026-07-10
+
+### Fixed
+* **`getValidateRoute` (match parametrizado):** los segmentos **estáticos** del patrón deben coincidir con la URL. Antes bastaba la misma cantidad de segmentos y se capturaban los `:params`, lo que producía falsos positivos (p. ej. patrón `/users/:id` con URL `/posts/99`). Contrato acotado: **literales del patrón + captura de parámetros**.
+* **`determineRoute` / núcleo:** se eliminó el `console.log` de depuración del path relativo. Los logs de demo quedan solo en `sandbox.ts`.
+
+### Added
+* **Batería de pruebas** (`tests/`): `lexer.test.mjs`, `router.test.mjs`, `base-url.test.mjs`, `setup-dom.mjs` — API pública vía `dist/`, mocks de DOM, **52 tests** (Node.js `node:test`).
+* **Scripts** en `package.json`: `test` y `test:build`.
+* **Documentación de uso:**
+  * [docs/TUTORIAL.md](docs/TUTORIAL.md) — mini-tutorial (propósito UI↔backend, no SSR, meta `dlroute:base-url`, cajones 0/1, contrato de match).
+  * [docs/README.md](docs/README.md) — índice de docs del paquete.
+  * [tests/README.md](tests/README.md) — cómo ejecutar y leer la suite.
+* **JSDoc actualizado** en `lexer.ts`, `router.ts`, `base-url.ts` y `type.ts` (alineado al comportamiento real; posicionamiento: enrutador de **UI en el navegador**, agnóstico de framework; HTTP/SSR = `dlunire/dlroute` en servidor).
+* **README del paquete** reescrito: posicionamiento, API esencial, enlaces al tutorial y al monorepo.
+
+### Changed
+* **README:** deja de presentarse como “router SPA genérico”; se documenta el diseño real (puente cliente/backend para UI, `component: unknown`, sin pretender SSR).
+* **Documentación del match:** se aclara que el lookup estático (`0-${uri}`) no sustituye la validación de literales **dentro** de un patrón `1-…` (esa validación ocurre en `getValidateRoute`).
+
+### Notes
+* Gramática de cliente: params con prefijo `:nombre`. No es la misma sintaxis de plantilla que el PHP (`{id}`), aunque la normalización de path busca alinearse con el ecosistema DLUnire.
+* Enlaces de ecosistema (fuera del tarball npm, en el workspace): README raíz del monorepo, `Documentos/ARQUITECTURA-DLUNIRE.md`, tutorial cruzado desde `Libraries/dlroute/docs`.
+
+---
+
 ## [2.0.0] - 2026-07-05
 
 ### BREAKING CHANGES
