@@ -6,11 +6,11 @@ Resolver **qué pieza de UI** mostrar según el path del navegador, alineado al 
 
 ## 1. Qué es (y qué no es)
 
-| Es | No es |
-|----|--------|
-| Puente **cliente ↔ backend** para el diseño de UI | Un router HTTP de servidor |
-| Núcleo **agnóstico de framework** (`component: unknown`) | Un reemplazo de Vue Router / React Router “completo” |
-| Base para que **tú** construyas el acoplamiento a tu UI | Un motor de **SSR** (eso es `dlunire/dlroute` en PHP) |
+| Es                                                       | No es                                                 |
+| -------------------------------------------------------- | ----------------------------------------------------- |
+| Puente **cliente ↔ backend** para el diseño de UI        | Un router HTTP de servidor                            |
+| Núcleo **agnóstico de framework** (`component: unknown`) | Un reemplazo de Vue Router / React Router “completo”  |
+| Base para que **tú** construyas el acoplamiento a tu UI  | Un motor de **SSR** (eso es `dlunire/dlroute` en PHP) |
 
 ```
 Navegador (path)  →  front-dlroute (¿qué vista?)  →  tu UI
@@ -82,12 +82,12 @@ window.addEventListener('popstate', navigate);
 
 ### Contrato de match (param)
 
-| Patrón | URL | ¿Match? |
-|--------|-----|---------|
-| `/users/:id` | `/users/99` | Sí → `{ id: '99' }` |
-| `/users/:id` | `/posts/99` | **No** |
-| `/clients/:id/orders/:order` | `/clients/1/orders/2` | Sí |
-| `/clients/:id/orders/:order` | `/shops/1/orders/2` | **No** |
+| Patrón                       | URL                   | ¿Match?             |
+| ---------------------------- | --------------------- | ------------------- |
+| `/users/:id`                 | `/users/99`           | Sí → `{ id: '99' }` |
+| `/users/:id`                 | `/posts/99`           | **No**              |
+| `/clients/:id/orders/:order` | `/clients/1/orders/2` | Sí                  |
+| `/clients/:id/orders/:order` | `/shops/1/orders/2`   | **No**              |
 
 Las **estáticas** (`0-`) ganan por igualdad total del path **antes** de mirar params.
 
