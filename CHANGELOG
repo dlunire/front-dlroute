@@ -7,6 +7,36 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [Unreleased]
+
+<!-- Próximos cambios aún no publicados -->
+
+---
+
+## [2.1.0] - 2026-07-10
+
+Cambio de **política de licencia** para facilitar la adopción del paquete en frontend.
+**Sin cambios de API de runtime.**
+
+### Changed
+
+- **Licencia:** de `AGPL-3.0-or-later` a **MIT**.
+  - Este paquete (cliente / UI) **no** se monetiza por separado.
+  - El resto del ecosistema DLUnire (servidor, kernel, etc.) **conserva** su licencia y **no** se modifica con este release.
+- Archivo [`LICENSE`](LICENSE) sustituido por el texto MIT.
+- `package.json`: `"license": "MIT"`, versión **`2.1.0`**.
+- Cabeceras de fuente (`.ts`) actualizadas a `SPDX-License-Identifier: MIT`.
+- `README.md`: sección de licencia y nota sobre versiones históricas en npm.
+- Metadatos opcionales en `package.json`: `repository`, `bugs`, `homepage`.
+
+### Notes
+
+- Las versiones npm **≤ 2.0.2** permanecen bajo los términos con los que se publicaron (**AGPL-3.0-or-later** en la línea 2.x).
+- Solo **2.1.0 y posteriores** se distribuyen bajo **MIT**.
+- Tras `pnpm run build`, `dist/` refleja las cabeceras MIT de las fuentes.
+
+---
+
 ## [2.0.2] - 2026-07-10
 
 Documentación y metadatos del repositorio (sin cambios de API de runtime respecto a 2.0.1).
@@ -115,7 +145,8 @@ Parche de **correctness** en el match de rutas parametrizadas, documentación al
 
 ## Enlaces de comparación
 
-- [Unreleased]: https://github.com/dlunire/front-dlroute/compare/v2.0.2...HEAD
+- [Unreleased]: https://github.com/dlunire/front-dlroute/compare/v2.1.0...HEAD
+- [2.1.0]: https://github.com/dlunire/front-dlroute/compare/v2.0.2...v2.1.0
 - [2.0.2]: https://github.com/dlunire/front-dlroute/compare/v2.0.1...v2.0.2
 - [2.0.1]: https://github.com/dlunire/front-dlroute/compare/v2.0.0...v2.0.1
 - [2.0.0]: https://github.com/dlunire/front-dlroute/compare/v1.0.3...v2.0.0

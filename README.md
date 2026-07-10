@@ -2,6 +2,21 @@
 
 **Resolución de rutas en el navegador para UI**, alineada al backend [DLUnire](https://github.com/dlunire).
 
+### Licencia: MIT (desde 2.1.0)
+
+A partir de la versión **2.1.0** este paquete se distribuye bajo la licencia **[MIT](LICENSE)**.
+
+**¿Por qué el cambio?**  
+Es un módulo de **frontend** (path del navegador → recurso de UI). La AGPL frenaba la adopción en apps y productos que no pueden o no quieren copyleft en el cliente. **No se monetiza este paquete por separado**: el objetivo es que sea fácil de usar, integrar y empaquetar (incluidas UIs propietarias o acopladas a un framework).
+
+**Qué no cambia**  
+El resto del ecosistema DLUnire (servidor, kernel, storage, etc.) **conserva su propio modelo de licencia** (p. ej. AGPL / comercial). Este cambio **solo** aplica a `@dlunire/front-dlroute`.
+
+**Versiones anteriores en npm**  
+Las versiones **≤ 2.0.2** se publicaron como **AGPL-3.0-or-later** y siguen bajo esos términos. Solo **2.1.0 y posteriores** son **MIT**. Detalle en el [CHANGELOG](CHANGELOG) y en la sección [Licencia](#licencia) al final.
+
+---
+
 > No es un router HTTP de servidor ni un motor de SSR.  
 > **SSR y despacho HTTP → `dlunire/dlroute` (PHP).**  
 > **Path del navegador → vista/recurso de UI → este paquete.**
@@ -54,7 +69,7 @@ pnpm add @dlunire/front-dlroute
 ```
 
 - Node 18+ / bundler ESM (Vite, etc.)
-- Licencia **AGPL-3.0-or-later** (ecosistema dual DLUnire)
+- Licencia **MIT**
 
 ---
 
@@ -127,6 +142,21 @@ pnpm test         # node --test tests/*.test.mjs
 ```
 
 Documentación de la batería: [tests/README.md](tests/README.md).
+
+---
+
+## Licencia
+
+**MIT** © 2026 David E. Luna M. — ver [LICENSE](LICENSE).
+
+Resumen (detalle al inicio de este README):
+
+| Versión npm | Licencia |
+|-------------|----------|
+| **≥ 2.1.0** | **MIT** — adopción frontend; este paquete no se monetiza aparte |
+| **≤ 2.0.2** | **AGPL-3.0-or-later** (tal como se publicaron) |
+
+Kernel/servidor DLUnire: **sin cambio** de licencia por este release.
 
 ---
 

@@ -2,6 +2,10 @@
 
 Resolver **qué pieza de UI** mostrar según el path del navegador, alineado al backend **DLUnire**.
 
+**Licencia:** **MIT** desde la versión **2.1.0** (adopción en frontend; este paquete no se monetiza por separado).  
+Versiones npm **≤ 2.0.2** siguen siendo **AGPL-3.0-or-later**. El resto de DLUnire (servidor/kernel) no cambia de licencia.  
+Más detalle: [README del paquete](../README.md#licencia-mit-desde-210).
+
 ---
 
 ## 1. Qué es (y qué no es)

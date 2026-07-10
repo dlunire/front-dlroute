@@ -1,6 +1,6 @@
 {
   "name": "@dlunire/front-dlroute",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": "Módulo de enrutamiento del lado del cliente (navegador) para integrarse con DLRoute de DLUnire",
   "type": "module",
   "main": "./dist/index.js",
@@ -34,7 +34,15 @@
     "parser"
   ],
   "author": "David E. Luna M.",
-  "license": "AGPL-3.0-or-later",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dlunire/front-dlroute.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dlunire/front-dlroute/issues"
+  },
+  "homepage": "https://github.com/dlunire/front-dlroute#readme",
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
