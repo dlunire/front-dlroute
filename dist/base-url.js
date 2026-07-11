@@ -89,16 +89,29 @@ export function getRoute() {
     return determineRoute();
 }
 /**
- * Resta el path base (meta) del path actual (`location`) y tokeniza el resto.
+ * Calcula la ruta **relativa a la app** y sus tokens léxicos.
  *
- * Ambas cadenas se normalizan con el lexer antes de comparar carácter a carácter.
+ * 1. Obtiene el path canónico actual desde `globalThis.location.href`
+ *    (normalizado con el lexer). Si no hay `location` o `href`, usa `"/"`.
+ * 2. Obtiene el path base canónico del meta `dlroute:base-url`
+ *    ({@link getCanonicalURI}; lanza si falta el meta).
+ * 3. Resta el prefijo base del path actual comparando carácter a carácter
+ *    (ambas cadenas ya normalizadas por el lexer).
+ * 4. Asegura que el resto empiece por `/` y tokeniza el resultado.
+ *
+ * No usa ningún dominio fijo del framework como fallback de URL.
+ *
+ * @returns Objeto con `uri` (path relativo canónico) y `tokens` (copia del análisis).
  *
  * @internal
  */
 function determineRoute() {
-    const dlunire = 'https://dlunire.dev';
-    /** Path canónico de la URL del navegador. */
-    const currentURI = parsing.getURIFromURL(globalThis.location?.href ?? dlunire);
+    /** URL actual o valor nulo si no es posible */
+    const url = globalThis.location?.href ?? null;
+    /** Path canónico de la URL del navegador (o `"/"` sin location/href). */
+    const currentURI = url !== null
+        ? parsing.getURIFromURL(url)
+        : "/";
     /** Path canónico de la base de la app (meta). */
     const uri = getCanonicalURI();
     let offset = 0;

@@ -13,6 +13,43 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [2.1.1] - 2026-07-10
+
+Parche de **correctness** en la resolución del path actual y cobertura de tests.
+Compatible con **2.1.0** (API pública sin cambios intencionales).
+
+### Fixed
+
+- **`determineRoute` (`base-url.ts`):** el path actual ya no cae en un fallback fijo a
+  `https://dlunire.dev` cuando falta `globalThis.location` o `location.href`.
+  - **Antes:** `getURIFromURL(location?.href ?? 'https://dlunire.dev')` inventaba el host
+    del sitio del framework fuera del navegador o sin `location` (SSR, tests, workers).
+  - **Ahora:** si no hay URL usable, el path canónico actual es **`"/"`** (neutro).
+  - El meta `dlroute:base-url` sigue siendo obligatorio vía `getCanonicalURI` / `getRoute`.
+
+### Changed
+
+- **JSDoc de `determineRoute`:** documenta los pasos reales (location → meta → resta de
+  prefijo → tokens), el fallback `"/"`, la ausencia de dominio fijo del framework, y
+  `@returns` con la forma de `{ uri, tokens }` (sin repetir el tipo TypeScript).
+- **`package.json`:** versión **`2.1.1`**.
+
+### Added
+
+- **Tests de fallback sin `location`** en `tests/base-url.test.mjs`:
+  - sin `globalThis.location` + meta en origen → `uri === "/"`, tokens vacíos;
+  - `location` sin `href`;
+  - `location.href === null`;
+  - sin `location` y meta bajo `/app` → ruta neutra `"/"`, sin `dlunire.dev`.
+- La batería completa pasa a **56** casos (`node --test tests/*.test.mjs`).
+
+### Notes
+
+- Los tests importan `dist/`; ejecutar `pnpm run build` antes de `pnpm test` o de publicar.
+- Tras publicar en npm, crear el tag git **`v2.1.1`** alineado con este CHANGELOG.
+
+---
+
 ## [2.1.0] - 2026-07-10
 
 Cambio de **política de licencia** para facilitar la adopción del paquete en frontend.
@@ -145,7 +182,8 @@ Parche de **correctness** en el match de rutas parametrizadas, documentación al
 
 ## Enlaces de comparación
 
-- [Unreleased]: https://github.com/dlunire/front-dlroute/compare/v2.1.0...HEAD
+- [Unreleased]: https://github.com/dlunire/front-dlroute/compare/v2.1.1...HEAD
+- [2.1.1]: https://github.com/dlunire/front-dlroute/compare/v2.1.0...v2.1.1
 - [2.1.0]: https://github.com/dlunire/front-dlroute/compare/v2.0.2...v2.1.0
 - [2.0.2]: https://github.com/dlunire/front-dlroute/compare/v2.0.1...v2.0.2
 - [2.0.1]: https://github.com/dlunire/front-dlroute/compare/v2.0.0...v2.0.1

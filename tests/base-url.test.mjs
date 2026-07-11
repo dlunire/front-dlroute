@@ -123,3 +123,82 @@ describe("base-url — getRoute sin meta", () => {
     assert.throws(() => getRoute(), /dlroute:base-url|meta/i);
   });
 });
+
+describe("base-url — fallback sin location", () => {
+  /**
+   * determineRoute: si no hay location/href, currentURI = "/" (no https://dlunire.dev).
+   * El meta sigue siendo obligatorio vía getCanonicalURI.
+   */
+
+  it("sin globalThis.location y meta en origen → uri '/' y tokens vacíos", () => {
+    browser = installBrowserMocks({
+      origin: "https://example.com",
+      basePath: "",
+      path: "/users/10",
+    });
+
+    const previous = globalThis.location;
+    // @ts-expect-error — simular entorno sin location (SSR / worker)
+    delete globalThis.location;
+
+    try {
+      const r = getRoute();
+      assert.equal(r.uri, "/");
+      assert.deepEqual(
+        r.tokens.map((t) => t.lexeme),
+        [],
+      );
+      assert.equal(JSON.stringify(r).includes("dlunire.dev"), false);
+    } finally {
+      globalThis.location = previous;
+    }
+  });
+
+  it("location sin href → mismo fallback '/' (no dominio del framework)", () => {
+    browser = installBrowserMocks({
+      origin: "https://example.com",
+      basePath: "",
+      path: "/anything",
+    });
+
+    globalThis.location = /** @type {Location} */ ({});
+
+    const r = getRoute();
+    assert.equal(r.uri, "/");
+    assert.equal(JSON.stringify(r).includes("dlunire.dev"), false);
+  });
+
+  it("location.href null → fallback '/'", () => {
+    browser = installBrowserMocks({
+      origin: "https://example.com",
+      basePath: "",
+      path: "/x",
+    });
+
+    globalThis.location = { href: /** @type {any} */ (null) };
+
+    const r = getRoute();
+    assert.equal(r.uri, "/");
+  });
+
+  it("sin location y meta bajo /app → uri relativa neutra '/' (no inventa host)", () => {
+    browser = installBrowserMocks({
+      origin: "https://example.com",
+      basePath: "/app",
+      path: "/app/users/10",
+    });
+
+    const previous = globalThis.location;
+    // @ts-expect-error
+    delete globalThis.location;
+
+    try {
+      const r = getRoute();
+      // currentURI="/" vs base "/app" → resto neutro "/", sin https://dlunire.dev
+      assert.equal(r.uri, "/");
+      assert.equal(JSON.stringify(r).includes("dlunire.dev"), false);
+    } finally {
+      globalThis.location = previous;
+    }
+  });
+});

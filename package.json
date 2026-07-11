@@ -1,6 +1,6 @@
 {
   "name": "@dlunire/front-dlroute",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Módulo de enrutamiento del lado del cliente (navegador) para integrarse con DLRoute de DLUnire",
   "type": "module",
   "main": "./dist/index.js",
