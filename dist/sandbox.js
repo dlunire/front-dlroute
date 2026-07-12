@@ -5,13 +5,14 @@
  * SPDX-License-Identifier: MIT
  */
 import * as routing from "./index";
-routing.route("/users/:id", function () {
-    console.log({ test: true, route: '/users/:id' });
+routing.route("/users/:id", function (params) {
+    console.log({ test: true, route: '/users/:id', params, asset: routing.asset("/product.png") });
 });
-let component = routing.dispatch().component;
+const dispatch = routing.dispatch();
+let component = dispatch.component;
 if (typeof component !== "function") {
     component = () => {
         console.log({ status: "Not Found (404)" });
     };
 }
-component();
+component(dispatch.validated.param);
