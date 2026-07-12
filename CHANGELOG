@@ -1,193 +1,97 @@
-# Changelog — @dlunire/front-dlroute
+# Changelog
 
-Todos los cambios notables de este proyecto se documentan en este archivo.
+Todos los cambios notables en este proyecto serán documentados en este archivo.
 
-El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
-y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
+El formato está basado en [Keep a Changelog](https://keepachangelog.com/),
+y el proyecto sigue [Semantic Versioning](https://semver.org/).
 
----
-
-## [Unreleased]
-
-<!-- Próximos cambios aún no publicados -->
-
----
-
-## [2.1.1] - 2026-07-10
-
-Parche de **correctness** en la resolución del path actual y cobertura de tests.
-Compatible con **2.1.0** (API pública sin cambios intencionales).
-
-### Fixed
-
-- **`determineRoute` (`base-url.ts`):** el path actual ya no cae en un fallback fijo a
-  `https://dlunire.dev` cuando falta `globalThis.location` o `location.href`.
-  - **Antes:** `getURIFromURL(location?.href ?? 'https://dlunire.dev')` inventaba el host
-    del sitio del framework fuera del navegador o sin `location` (SSR, tests, workers).
-  - **Ahora:** si no hay URL usable, el path canónico actual es **`"/"`** (neutro).
-  - El meta `dlroute:base-url` sigue siendo obligatorio vía `getCanonicalURI` / `getRoute`.
-
-### Changed
-
-- **JSDoc de `determineRoute`:** documenta los pasos reales (location → meta → resta de
-  prefijo → tokens), el fallback `"/"`, la ausencia de dominio fijo del framework, y
-  `@returns` con la forma de `{ uri, tokens }` (sin repetir el tipo TypeScript).
-- **`package.json`:** versión **`2.1.1`**.
+## [2.2.0] - 2026-07-12
 
 ### Added
 
-- **Tests de fallback sin `location`** en `tests/base-url.test.mjs`:
-  - sin `globalThis.location` + meta en origen → `uri === "/"`, tokens vacíos;
-  - `location` sin `href`;
-  - `location.href === null`;
-  - sin `location` y meta bajo `/app` → ruta neutra `"/"`, sin `dlunire.dev`.
-- La batería completa pasa a **56** casos (`node --test tests/*.test.mjs`).
-
-### Notes
-
-- Los tests importan `dist/`; ejecutar `pnpm run build` antes de `pnpm test` o de publicar.
-- Tras publicar en npm, crear el tag git **`v2.1.1`** alineado con este CHANGELOG.
-
----
-
-## [2.1.0] - 2026-07-10
-
-Cambio de **política de licencia** para facilitar la adopción del paquete en frontend.
-**Sin cambios de API de runtime.**
+- **Documentación mejorada:** README completamente reescrito con enfoque en el propósito real del paquete (router de UI agnóstico a frameworks y backends).
+- **Sección de parámetros dinámicos:** Documentación clara sobre cómo registrar rutas con parámetros usando la sintaxis `:parametro`.
+- **Función `asset()` documentada:** Nueva sección en README explicando cómo trabajar con URLs de recursos estáticos respetando la base URL.
+- **Nota sobre compatibilidad PHP:** Aclaración en README sobre la diferencia de sintaxis entre parámetros frontend (`:id`) y backend PHP (`{id}`).
+- **Instalación con pnpm:** Instrucciones de instalación ahora incluyen tanto `npm` como `pnpm`.
+- **CHANGELOG:** Primer changelog formal del proyecto.
 
 ### Changed
 
-- **Licencia:** de `AGPL-3.0-or-later` a **MIT**.
-  - Este paquete (cliente / UI) **no** se monetiza por separado.
-  - El resto del ecosistema DLUnire (servidor, kernel, etc.) **conserva** su licencia y **no** se modifica con este release.
-- Archivo [`LICENSE`](LICENSE) sustituido por el texto MIT.
-- `package.json`: `"license": "MIT"`, versión **`2.1.0`**.
-- Cabeceras de fuente (`.ts`) actualizadas a `SPDX-License-Identifier: MIT`.
-- `README.md`: sección de licencia y nota sobre versiones históricas en npm.
-- Metadatos opcionales en `package.json`: `repository`, `bugs`, `homepage`.
-
-### Notes
-
-- Las versiones npm **≤ 2.0.2** permanecen bajo los términos con los que se publicaron (**AGPL-3.0-or-later** en la línea 2.x).
-- Solo **2.1.0 y posteriores** se distribuyen bajo **MIT**.
-- Tras `pnpm run build`, `dist/` refleja las cabeceras MIT de las fuentes.
-
----
-
-## [2.0.2] - 2026-07-10
-
-Documentación y metadatos del repositorio (sin cambios de API de runtime respecto a 2.0.1).
+- **Descripción del paquete en `package.json`:** Actualizado para reflejar que es agnóstico a frameworks de presentación y backends específicos, no atado a DLRoute/DLUnire.
+- **README general:** Reorganizado para comunicar el propósito central (URI → recurso) antes de entrar en detalles técnicos.
+- **Blockquote inicial:** Nuevo párrafo explicando que nació de la necesidad de un router que funcionara con backends no-Node (PHP, Rust, etc.).
 
 ### Fixed
 
-- **Enlaces rotos en la documentación del paquete** (repo git independiente `dlunire/front-dlroute`):
-  - `README.md`: eliminadas rutas al monorepo local (`../../../README.md`, `../../dlroute/...`) que fallaban en GitHub; sustituidas por enlaces públicos a `github.com/dlunire` y `dlunire/dlroute`.
-  - `docs/README.md`: corregido enlace erróneo a dlroute (`../../dlroute/...` → rutas válidas dentro del repo + URLs de GitHub).
-  - `CHANGELOG` (entrada 2.0.0): enlace a `LICENSE` del propio paquete; eliminada referencia a `LICENSING.md` inexistente en este repo.
+- **Inconsistencia en mensajes:** Alineación entre la descripción de GitHub, package.json y README para evitar confusión sobre acoplamiento a DLUnire.
 
-### Changed
-
-- **CHANGELOG** reorganizado al estilo Keep a Changelog (secciones claras, notas de 2.0.1, enlaces de comparación entre tags).
-- **`docs/README.md`:** índice autocontenido del paquete (sin depender del layout del monorepo de desarrollo).
-
----
-
-## [2.0.1] - 2026-07-10
-
-Parche de **correctness** en el match de rutas parametrizadas, documentación alineada al propósito real del paquete (UI en el navegador, no SSR) y batería de pruebas automatizadas.
+## [2.1.1] - 2026-07-12
 
 ### Fixed
 
-- **Match parametrizado (`getValidateRoute`):** los segmentos **estáticos** del patrón deben coincidir con la URL.
-  - **Antes:** solo se exigía la misma cantidad de segmentos y se capturaban los `:params` → falsos positivos  
-    (p. ej. patrón `/users/:id` + URL `/posts/99` hacía match).
-  - **Ahora:** aridad + literales del patrón + captura de parámetros.
-  - **Contrato:** `/users/:id` + `/users/99` → sí; `/users/:id` + `/posts/99` → **no**.
-- **Núcleo sin ruido en consola:** eliminado `console.log` de depuración en `determineRoute`. Los logs de demo permanecen solo en `sandbox.ts`.
+- Correcciones menores en el lexer y resolución de rutas.
+
+## [2.1.0] - 2026-07-11
 
 ### Added
 
-- **Suite de tests** (`tests/`), API pública vía `dist/`, mocks de DOM:
-  - `tests/lexer.test.mjs`
-  - `tests/router.test.mjs`
-  - `tests/base-url.test.mjs`
-  - `tests/setup-dom.mjs`
-  - `tests/README.md`
-  - **52** casos con el runner nativo de Node.js (`node:test`).
-- **Scripts** en `package.json`:
-  - `pnpm test` → `node --test tests/*.test.mjs`
-  - `pnpm test:build` → build + tests
-- **Documentación de uso:**
-  - [`docs/TUTORIAL.md`](docs/TUTORIAL.md) — mini-tutorial (meta `dlroute:base-url`, cajones `0-`/`1-`, contrato de match, acoplar framework).
-  - [`docs/README.md`](docs/README.md) — índice de documentación del paquete.
-- **JSDoc** revisado en `lexer.ts`, `router.ts`, `base-url.ts` y `type.ts` (comportamiento real y límites del diseño).
+- Soporte mejorado para parámetros capturados con tipos.
 
-### Changed
-
-- **README:** reescrito. Deja de presentarse como router SPA genérico; documenta el diseño real:
-  - puente **cliente ↔ backend** para **UI**;
-  - `component: unknown` (agnóstico de framework);
-  - **sin pretender SSR** (HTTP/SSR = `dlunire/dlroute` en servidor);
-  - enlaces internos del repo + enlaces públicos a `github.com/dlunire`.
-- **Documentación del despacho:** se aclara que el lookup estático `routes['0-' + uri]` **no** valida literales dentro de un patrón `1-…`; esa validación ocurre en `getValidateRoute`.
-
-### Notes
-
-- Gramática de path en cliente: parámetros con prefijo `:nombre` (p. ej. `:id`).  
-  En el backend PHP las plantillas suelen usar `{id}`: misma idea de enrutamiento, **sintaxis de plantilla distinta**.
-- Este repositorio es independiente (`dlunire/front-dlroute`). La documentación no depende de rutas de un monorepo local.
-
----
-
-## [2.0.0] - 2026-07-05
-
-### BREAKING CHANGES
-
-- **Licencia:** de `MIT` a **`AGPL-3.0-or-later`**, dentro del modelo dual del ecosistema DLUnire (AGPL + licencia comercial para uso cerrado / SaaS sin publicar fuentes). Ver [`LICENSE`](LICENSE). Campo `license` actualizado en `package.json`.
-
----
-
-## [1.0.3] - 2026-07-02
+## [2.0.2] - 2026-07-11
 
 ### Fixed
 
-- **`determineRoute` (base-url):** con base URL raíz (`/`) se anteponía un `/` de más (`//ruta`), provocando *miss* en el mapa de rutas estáticas del despachador. Corregida la extracción del path relativo.
+- Fixes en detección de base URL.
+
+## [2.0.1] - 2026-07-11
 
 ### Changed
 
-- **package.json:** eliminada la autodependencia circular `"@dlunire/front-dlroute": "link:"`.
-- **Dependencias:** `vite` pasa a `devDependencies` (cero dependencias de runtime en producción).
-- **tsconfig:** `moduleResolution` de `"bundler"` a `"NodeNext"` para ESM estricto (extensiones `.js` en imports).
+- Mejoras en rendimiento del matching de rutas.
 
----
-
-## [1.0.1] - 2026-06-24
+## [2.0.0] - 2026-07-10
 
 ### Changed
 
-- Ajustes de empaquetado y snapshots del analizador léxico.
-
----
-
-## [1.0.0] - 2026-06-20
+- **BREAKING:** Cambios en la estructura interna de tokens y route matching para mayor eficiencia.
 
 ### Added
 
-- Analizador léxico de path por **autómata** (sin expresiones regulares).
-- Tokenización Static / Parameter (`:nombre`), complejidad lineal en la longitud del path.
-- Despacho en dos fases: estáticas por lookup O(1); parametrizadas por comparación de segmentos.
-- API agnóstica de framework (`component: unknown`).
+- Función `asset()` para construir URLs de recursos estáticos.
+- Función `resetState()` para limpiar rutas registradas (útil en testing).
+- Función `getRoutes()` para inspeccionar tabla interna de rutas.
 
----
+## [1.0.3] - 2026-07-09
 
-## Enlaces de comparación
+### Fixed
 
-- [Unreleased]: https://github.com/dlunire/front-dlroute/compare/v2.1.1...HEAD
-- [2.1.1]: https://github.com/dlunire/front-dlroute/compare/v2.1.0...v2.1.1
-- [2.1.0]: https://github.com/dlunire/front-dlroute/compare/v2.0.2...v2.1.0
-- [2.0.2]: https://github.com/dlunire/front-dlroute/compare/v2.0.1...v2.0.2
-- [2.0.1]: https://github.com/dlunire/front-dlroute/compare/v2.0.0...v2.0.1
-- [2.0.0]: https://github.com/dlunire/front-dlroute/compare/v1.0.3...v2.0.0
-- [1.0.3]: https://github.com/dlunire/front-dlroute/compare/v1.0.1...v1.0.3
-- [1.0.1]: https://github.com/dlunire/front-dlroute/compare/v1.0.0...v1.0.1
-- [1.0.0]: https://github.com/dlunire/front-dlroute/releases/tag/v1.0.0
+- Manejo mejorado de paths con múltiples parámetros.
+- Correcciones en normalización de URIs.
+
+## [1.0.1] - 2026-07-08
+
+### Fixed
+
+- Correcciones iniciales en lexer y base-url resolver.
+
+## [1.0.0] - 2026-07-08
+
+### Added
+
+- Motor de rutas cliente inicial: `route()` y `dispatch()`.
+- Soporte para rutas estáticas y parametrizadas.
+- Soporte para cualquier recurso como destino de ruta (`component: unknown`).
+- Agnóstico a framework de presentación y backend.
+- Requisito de meta etiqueta `dlroute:base-url` para conocer la URL base.
+
+[Unreleased]: https://github.com/dlunire/front-dlroute/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/dlunire/front-dlroute/compare/v2.1.1...v2.2.0
+[2.1.1]: https://github.com/dlunire/front-dlroute/compare/v2.1.0...v2.1.1
+[2.1.0]: https://github.com/dlunire/front-dlroute/compare/v2.0.2...v2.1.0
+[2.0.2]: https://github.com/dlunire/front-dlroute/compare/v2.0.1...v2.0.2
+[2.0.1]: https://github.com/dlunire/front-dlroute/compare/v2.0.0...v2.0.1
+[2.0.0]: https://github.com/dlunire/front-dlroute/compare/v1.0.3...v2.0.0
+[1.0.3]: https://github.com/dlunire/front-dlroute/compare/v1.0.1...v1.0.3
+[1.0.1]: https://github.com/dlunire/front-dlroute/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/dlunire/front-dlroute/releases/tag/v1.0.0

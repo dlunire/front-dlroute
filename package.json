@@ -1,7 +1,7 @@
 {
   "name": "@dlunire/front-dlroute",
-  "version": "2.1.1",
-  "description": "Módulo de enrutamiento del lado del cliente (navegador) para integrarse con DLRoute de DLUnire",
+  "version": "2.2.0",
+  "description": "Motor de rutas para UI: asocia URIs a componentes, funciones o cualquier recurso. Sin acoplarse a un framework de presentación ni a un backend específico.",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
