@@ -7,11 +7,17 @@
 
 import * as routing from "./index";
 
-routing.route("/users/:id", function () {
-    console.log({ test: true, route: '/users/:id' });
+type Dispatch = routing.Dispatch;
+type Param = routing.Param;
+
+
+
+routing.route("/users/:id", function (params: Param) {
+    console.log({ test: true, route: '/users/:id', params, asset: routing.asset("/product.png") });
 });
 
-let component: Function | null = routing.dispatch().component as typeof Function | null;
+const dispatch: Dispatch = routing.dispatch();
+let component: Function | null = dispatch.component as typeof Function | null;
 
 if (typeof component !== "function") {
     component = () => {
@@ -19,4 +25,4 @@ if (typeof component !== "function") {
     }
 }
 
-component();
+component(dispatch.validated.param);

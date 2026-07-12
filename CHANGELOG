@@ -5,6 +5,15 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/),
 y el proyecto sigue [Semantic Versioning](https://semver.org/).
 
+## [2.2.1] - 2026-07-12
+
+### Fixed
+
+- **Configuración de compilación:** Corregida la configuración de build para evitar que `https://dlunire.dev` quede incrustada en los archivos generados.
+- **Documentación de la API:** Actualizada la documentación de `getURLFromURL()` para reflejar correctamente su comportamiento al utilizar la URL del entorno de ejecución cuando no se proporciona una URL explícita.
+- **Documentación de excepciones:** Añadida la documentación de las excepciones (`Error` y `TypeError`) que puede producir `getURLFromURL()`.
+- **Batería de pruebas:** Actualizados los casos de prueba de `getURLFromURL()` para alinearlos con el contrato de la API, diferenciando el uso de la URL del entorno de ejecución de la validación de URLs no válidas.
+
 ## [2.2.0] - 2026-07-12
 
 ### Added
@@ -85,7 +94,8 @@ y el proyecto sigue [Semantic Versioning](https://semver.org/).
 - Agnóstico a framework de presentación y backend.
 - Requisito de meta etiqueta `dlroute:base-url` para conocer la URL base.
 
-[Unreleased]: https://github.com/dlunire/front-dlroute/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/dlunire/front-dlroute/compare/v2.2.1...HEAD
+[2.2.1]: https://github.com/dlunire/front-dlroute/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/dlunire/front-dlroute/compare/v2.1.1...v2.2.0
 [2.1.1]: https://github.com/dlunire/front-dlroute/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/dlunire/front-dlroute/compare/v2.0.2...v2.1.0

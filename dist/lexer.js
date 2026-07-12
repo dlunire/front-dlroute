@@ -367,41 +367,49 @@ export function getURIFromURI(uri) {
     return getCanonicalURI();
 }
 /**
- * Construye un nuevo objeto `URL` a partir de una URL de entrada,
- * reemplazando su `pathname` por su versión canónica generada por
- * {@link getURIFromURI}.
+ * Obtiene la forma canónica de una URL para su utilización por el
+ * sistema de enrutamiento.
  *
- * Esta función constituye el punto de entrada del sistema de
- * enrutamiento de DLUnire en el cliente: transforma una URL absoluta
- * en una representación canónica sobre la que el router puede operar
- * de forma determinista, independientemente de cómo haya sido escrita
- * originalmente.
+ * Si se proporciona una URL, esta será normalizada. En caso contrario,
+ * la función intentará utilizar la URL actual del entorno de ejecución
+ * (`globalThis.location.href`). El `pathname` se transforma mediante
+ * {@link getURIFromURI}, mientras que el `origin` (protocolo, host y
+ * puerto) se conserva. Los componentes `search` (query string) y
+ * `hash` (fragmento) no forman parte de la URL resultante.
  *
- * Conserva exclusivamente el `origin` (protocolo, host y puerto) de
- * la URL original. El `pathname` se normaliza mediante
- * {@link getURIFromURI}, mientras que el `search` (query string) y el
- * `hash` se descartan al construir el nuevo objeto `URL`.
+ * @param stringURL
+ * URL absoluta que será normalizada. Si se omite o es `null`, se
+ * utilizará `globalThis.location.href`.
  *
- * ...
+ * @returns
+ * Un nuevo objeto `URL` cuyo `pathname` corresponde a la forma
+ * canónica utilizada por el sistema de enrutamiento.
+ *
+ * @throws {Error}
+ * Si no se proporciona una URL y el entorno de ejecución no dispone de
+ * `globalThis.location.href`.
+ *
+ * @throws {TypeError}
+ * Si la URL proporcionada no es una URL absoluta válida.
  *
  * @remarks
- * Esta función actúa como adaptador entre la API nativa `URL` del
- * navegador (o de Node.js) y el analizador léxico de rutas de
- * DLUnire. El autómata únicamente procesa URIs (`pathname`), por lo
- * que la extracción y posterior reconstrucción de la URL completa se
- * realizan fuera del proceso de análisis.
+ * Esta función actúa como puente entre la API estándar `URL` y el
+ * analizador léxico del router. El proceso de normalización se aplica
+ * exclusivamente al `pathname`, ya que es el único componente de la
+ * URL utilizado durante la resolución de rutas.
  *
- * Gracias a ello, el router del cliente trabaja siempre sobre una
- * representación canónica de la ruta, utilizando exactamente la misma
- * semántica de normalización que el sistema de enrutamiento de
- * DLUnire. Esto garantiza que la resolución de rutas sea consistente
- * entre el cliente y el servidor.
+ * Al reconstruir la URL a partir del `origin` y de un `pathname`
+ * normalizado, el router opera siempre sobre una representación
+ * uniforme y determinista de la ruta, independientemente del origen de
+ * la URL.
  */
-export function getURLFromURL(stringURL = '') {
-    if (stringURL.trim() === '') {
-        stringURL = globalThis.location?.href ?? 'https://dlunire.dev';
+export function getURLFromURL(stringURL = null) {
+    /** URL a normalizar */
+    const resolvedURL = stringURL ?? globalThis.location?.href ?? null;
+    if (resolvedURL === null) {
+        throw new Error("No se proporcionó una URL y no fue posible obtener la URL actual.");
     }
-    const url = new URL(stringURL);
+    const url = new URL(resolvedURL);
     const uri = getURIFromURI(url.pathname);
     return new URL(`${url.origin}${uri}`);
 }

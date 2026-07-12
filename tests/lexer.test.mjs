@@ -180,15 +180,24 @@ describe("lexer — URL absolutas", () => {
     assert.equal(url.search, "");
   });
 
-  it("getURLFromURL('') usa location o fallback", () => {
+  it("getURLFromURL() utiliza la URL del entorno cuando no se proporciona una URL", () => {
     const prev = globalThis.location;
     globalThis.location = { href: "https://app.test/foo//bar" };
+
     try {
-      const url = getURLFromURL("");
+      const url = getURLFromURL();
+
       assert.equal(url.origin, "https://app.test");
       assert.equal(url.pathname, "/foo/bar");
     } finally {
       globalThis.location = prev;
     }
+  });
+
+  it("getURLFromURL('') lanza TypeError", () => {
+    assert.throws(
+      () => getURLFromURL(""),
+      TypeError,
+    );
   });
 });
